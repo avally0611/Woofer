@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -12,7 +12,7 @@
         android:drawableEnd="@drawable/ic_search"
         android:ems="10"
         android:inputType="text"
-        android:text="Enter Username Here..."
+        android:hint="Enter Username Here..."
         tools:layout_editor_absoluteX="12dp"
         tools:layout_editor_absoluteY="28dp" />
 
