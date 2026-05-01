@@ -39,7 +39,7 @@ public class HomeScreenManager {
                 .build();
 
         Request request = new Request.Builder()
-                .url("http://10.0.2.2/myapp/get_posts.php")
+                .url("https://wmc.ms.wits.ac.za/students/sgroup2668/get_posts.php")
                 .post(formBody)
                 .build();
 
