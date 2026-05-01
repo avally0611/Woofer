@@ -1,4 +1,4 @@
-package com.example.wooferproject;
+package com.example.wooferproject.models;
 
 import android.os.Bundle;
 
@@ -8,19 +8,18 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-public class Post extends AppCompatActivity {
+public class Post {
     private String username;
     private String text;
     private String location;
-    private String image ref;
-    private int upvotes;
+    private String image;
 
-    public Post(String username, String text, String location, String image ref, int upvotes) {
+
+    public Post(String username, String text, String location, String image) {
         this.username = username;
         this.text = text;
         this.location = location;
-        this.image ref = image ref;
-        this.upvotes = upvotes;
+        this.image = image;
 
     }
 
@@ -36,21 +35,6 @@ public class Post extends AppCompatActivity {
         return location;
     }
 
-    public String getImage ref() {
-        return image ref;
-    }
-
-    public int getUpvotes() {
-        return upvotes;
-    }
-
-    public void setUpvotes(int inUpvotes) {
-        this.upvotes = inUpvotes;
-    }
-
-
-
-}
 
 
 }
