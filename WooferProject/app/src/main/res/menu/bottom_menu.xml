@@ -19,6 +19,6 @@
     <item
         android:id="@+id/profile"
         android:title="Profile"
-        android:icon="@drawable/woman" />
+        android:icon="@drawable/profile" />
 
 </menu>

@@ -5,7 +5,9 @@ package com.example.wooferproject.activities;
 
 //okay also wwith recycle view comes a recycler adaptor that gets dsta from arraylist and puts in card
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -16,6 +18,7 @@ import com.example.wooferproject.R;
 import com.example.wooferproject.interfaces.PostCallback;
 import com.example.wooferproject.managers.HomeScreenManager;
 import com.example.wooferproject.models.Post;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.ArrayList;
 
@@ -78,5 +81,50 @@ public class HomeScreenActivity extends AppCompatActivity
                 });
             }
         });
+        // this allows the bottom navigation menu to be used
+        BottomNavigationView bottomNav = findViewById(R.id.navigationBar);
+        setupBottomNav(bottomNav);
+
+        // highlight current tab
+        bottomNav.setSelectedItemId(R.id.home);
+
     }
+    // this allows the switch between home screen and other screens using the bottom navigation menu
+    protected void setupBottomNav(BottomNavigationView bottomNav) {
+
+        bottomNav.setOnItemSelectedListener(item -> {
+
+            int id = item.getItemId();
+
+            if (id == R.id.home) {
+
+                return true;
+
+            } else if (id == R.id.search) {
+
+                Intent intent = new Intent(this, SearchActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+                return true;
+
+            } else if (id == R.id.add) {
+
+                Intent intent = new Intent(this, PostPageActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+                return true;
+
+            } else if (id == R.id.profile) {
+
+                Intent intent = new Intent(this, ProfilePageActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+
+                return true;
+            }
+
+            return false;
+        });
+    }
+
 }
