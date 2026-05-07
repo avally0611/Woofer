@@ -17,7 +17,7 @@ public class ProfilePageManager {
 
         new Thread(() -> {
             try {
-                URL url = new URL("http://YOUR_IP/updateProfile.php");
+                URL url = new URL("https://wmc.ms.wits.ac.za/students/sgroup2668/updateProfile.php");
 
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
@@ -47,7 +47,7 @@ public class ProfilePageManager {
 
         new Thread(() -> {
             try {
-                URL url = new URL("http://YOUR_IP/get_profile.php?id=" + userId);
+                URL url = new URL("https://wmc.ms.wits.ac.za/students/sgroup2668/get_profile.php?id=" + userId);
 
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
@@ -94,7 +94,7 @@ public class ProfilePageManager {
 
         new Thread(() -> {
             try {
-                URL url = new URL("http://YOUR_IP/upload_profile_image.php");
+                URL url = new URL("https://wmc.ms.wits.ac.za/students/sgroup2668/upload_profile_pic.php");
 
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
@@ -121,7 +121,7 @@ public class ProfilePageManager {
 
         new Thread(() -> {
             try {
-                URL url = new URL("http://YOUR_IP/get_profile_image.php?id=" + userId);
+                URL url = new URL("https://wmc.ms.wits.ac.za/students/sgroup2668/get_profile_pic.php?id=" + userId);
 
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 

@@ -7,8 +7,10 @@ import com.example.wooferproject.R;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class SearchActivity extends AppCompatActivity {
+    private int userId;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        userId = 1; //getIntent().getIntExtra("user_id", -1);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.search);
 
@@ -29,24 +31,25 @@ public class SearchActivity extends AppCompatActivity {
             if (id == R.id.home) {
 
                 Intent intent = new Intent(this, HomeScreenActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                intent.putExtra("user_id", userId);
                 startActivity(intent);
+
                 return true;
 
             } else if (id == R.id.search) {
-
                 return true;
 
             } else if (id == R.id.add) {
 
                 Intent intent = new Intent(this, PostPageActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                intent.putExtra("user_id", userId);
                 startActivity(intent);
+
                 return true;
 
             } else if (id == R.id.profile) {
                 Intent intent = new Intent(this, ProfilePageActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                intent.putExtra("user_id", userId);
                 startActivity(intent);
                 return true;
             }

@@ -29,6 +29,7 @@ public class ProfilePageActivity extends AppCompatActivity {
     TextView password, resetPassword;
     Button editBtn, logoutBtn;
     ImageView profileImage;
+    private int userId;
 
     boolean isEditing = false;
     private ActivityResultLauncher<String> imagePickerLauncher;
@@ -40,7 +41,7 @@ public class ProfilePageActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.profile_page);
 
-        int userId = getIntent().getIntExtra("user_id", -1);
+        userId = 1;//getIntent().getIntExtra("user_id", -1);
 
         // UI
         name = findViewById(R.id.profile_name);
@@ -205,15 +206,31 @@ public class ProfilePageActivity extends AppCompatActivity {
             int id = item.getItemId();
 
             if (id == R.id.home) {
-                startActivity(new Intent(this, HomeScreenActivity.class));
+
+                Intent intent = new Intent(this, HomeScreenActivity.class);
+                intent.putExtra("user_id", userId);
+                startActivity(intent);
+
                 return true;
+
             } else if (id == R.id.search) {
-                startActivity(new Intent(this, SearchActivity.class));
+
+                Intent intent = new Intent(this, SearchActivity.class);
+                intent.putExtra("user_id", userId);
+                startActivity(intent);
+
                 return true;
+
             } else if (id == R.id.add) {
-                startActivity(new Intent(this, PostPageActivity.class));
+
+                Intent intent = new Intent(this, PostPageActivity.class);
+                intent.putExtra("user_id", userId);
+                startActivity(intent);
+
                 return true;
+
             } else if (id == R.id.profile) {
+
                 return true;
             }
 

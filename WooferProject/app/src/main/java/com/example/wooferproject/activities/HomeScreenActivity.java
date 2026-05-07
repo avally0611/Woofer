@@ -29,10 +29,13 @@ public class HomeScreenActivity extends AppCompatActivity
     private PostAdapter adapter;
     private ArrayList<Post> posts = new ArrayList<Post>();
     private HomeScreenManager homeScreenManager;
+    private int userId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        userId = 1; //getIntent().getIntExtra("user_id", -1);
+
 
         //sets the screen desgin - uses home xml screen code
         setContentView(R.layout.home_screen);
@@ -103,21 +106,22 @@ public class HomeScreenActivity extends AppCompatActivity
             } else if (id == R.id.search) {
 
                 Intent intent = new Intent(this, SearchActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                intent.putExtra("user_id", userId);
                 startActivity(intent);
+
                 return true;
 
             } else if (id == R.id.add) {
 
                 Intent intent = new Intent(this, PostPageActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                intent.putExtra("user_id", userId);
                 startActivity(intent);
+
                 return true;
 
             } else if (id == R.id.profile) {
-
                 Intent intent = new Intent(this, ProfilePageActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                intent.putExtra("user_id", userId);
                 startActivity(intent);
 
                 return true;
