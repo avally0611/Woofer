@@ -1,3 +1,14 @@
 <resources>
     <string name="app_name">WooferProject</string>
+    <string name="logo_desc">App Logo</string>
+    <string name="hint_first_name">Enter First Name</string>
+    <string name="hint_last_name">Enter Last Name</string>
+    <string name="hint_username">Enter Username</string>
+    <string name="hint_email">Enter Email Address</string>
+    <string name="hint_password">Enter Password</string>
+    <string name="signup">Sign Up</string>
+    <string name="already_have_account">Already have an account? Login</string>
+    <string name="password_placeholder">...</string>
+    <string name="login">Login</string>
+    <string name="forgot_password">Forgot Password?</string>
 </resources>

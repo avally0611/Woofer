@@ -5,13 +5,15 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    android:padding="16dp"
+    tools:context=".activities.LoginActivity">
 
     <ImageView
         android:id="@+id/logo"
         android:layout_width="120dp"
         android:layout_height="120dp"
         android:layout_marginBottom="32dp"
+        android:contentDescription="@string/logo_desc"
         android:src="@mipmap/ic_launcher"
         app:layout_constraintBottom_toTopOf="@+id/enterUsername"
         app:layout_constraintEnd_toEndOf="parent"
@@ -22,11 +24,14 @@
 
     <EditText
         android:id="@+id/enterUsername"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:ems="10"
-        android:hint="Enter Username"
+        android:hint="@string/hint_username"
         android:inputType="text"
+        android:minHeight="48dp"
+        android:padding="12dp"
+        android:autofillHints="username"
         app:layout_constraintBottom_toTopOf="@+id/password"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
@@ -35,12 +40,15 @@
 
     <EditText
         android:id="@+id/password"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
         android:ems="10"
-        android:hint="Password"
+        android:hint="@string/hint_password"
         android:inputType="textPassword"
+        android:minHeight="48dp"
+        android:padding="12dp"
+        android:autofillHints="password"
         app:layout_constraintBottom_toTopOf="@+id/loginBtn"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
@@ -49,10 +57,12 @@
 
     <Button
         android:id="@+id/loginBtn"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
-        android:text="Login"
+        android:layout_marginEnd="8dp"
+        android:text="@string/login"
+        android:minHeight="48dp"
         app:layout_constraintBottom_toTopOf="@+id/forgot"
         app:layout_constraintEnd_toStartOf="@+id/signUpBtn"
         app:layout_constraintHorizontal_bias="0.5"
@@ -61,9 +71,11 @@
 
     <Button
         android:id="@+id/signUpBtn"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Sign Up"
+        android:layout_marginStart="8dp"
+        android:text="@string/signup"
+        android:minHeight="48dp"
         app:layout_constraintBaseline_toBaselineOf="@+id/loginBtn"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
@@ -75,7 +87,10 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
         android:clickable="true"
-        android:text="Forgot Password?"
+        android:focusable="true"
+        android:minHeight="48dp"
+        android:gravity="center"
+        android:text="@string/forgot_password"
         android:textColor="#A42323"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

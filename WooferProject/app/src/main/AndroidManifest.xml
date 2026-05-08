@@ -15,8 +15,9 @@
         android:theme="@style/Theme.WooferProject"
         android:usesCleartextTraffic="true">
         <!-- add cleartext traffic bypass so it dfoesnt block local server -->
+
         <activity
-            android:name=".activities.HomeScreenActivity"
+            android:name=".activities.LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -24,12 +25,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity android:name=".activities.HomeScreenActivity" />
         <activity android:name=".activities.ProfilePageActivity" />
         <activity android:name=".activities.ForgotPasswordActivity" />
         <activity android:name=".activities.SignUpActivity" />
         <activity android:name=".activities.SearchActivity" />
         <activity android:name=".activities.PostPageActivity" />
-        <activity android:name=".activities.LoginActivity" />
     </application>
 
 </manifest>
