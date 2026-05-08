@@ -1,12 +1,17 @@
 package com.example.wooferproject.managers;
 
+import android.util.Base64;
+
 import com.example.wooferproject.models.User;
 
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.DataOutputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -17,7 +22,7 @@ public class ProfilePageManager {
 
         new Thread(() -> {
             try {
-                URL url = new URL("https://wmc.ms.wits.ac.za/students/sgroup2668/updateProfile.php");
+                URL url = new URL("https://wmc.ms.wits.ac.za/students/sgroup2668/update_profile.php");
 
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
@@ -94,22 +99,49 @@ public class ProfilePageManager {
 
         new Thread(() -> {
             try {
+
+                String boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW";
                 URL url = new URL("https://wmc.ms.wits.ac.za/students/sgroup2668/upload_profile_pic.php");
 
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setDoOutput(true);
-
-                String base64 = android.util.Base64.encodeToString(imageBytes, android.util.Base64.DEFAULT);
-
-                String data = "id=" + userId + "&image=" + base64;
+                conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
 
                 OutputStream os = conn.getOutputStream();
-                os.write(data.getBytes());
-                os.flush();
-                os.close();
+                DataOutputStream dos = new DataOutputStream(os);
 
-                conn.getInputStream();
+                // user id
+                dos.writeBytes("--" + boundary + "\r\n");
+                dos.writeBytes("Content-Disposition: form-data; name=\"id\"\r\n\r\n");
+                dos.writeBytes(String.valueOf(userId) + "\r\n");
+
+                // image
+                dos.writeBytes("--" + boundary + "\r\n");
+                dos.writeBytes("Content-Disposition: form-data; name=\"image\"; filename=\"profile.jpg\"\r\n");
+                dos.writeBytes("Content-Type: image/jpeg\r\n\r\n");
+                dos.write(imageBytes);
+                dos.writeBytes("\r\n");
+
+                dos.writeBytes("--" + boundary + "--\r\n");
+                dos.flush();
+                dos.close();
+
+                int code = conn.getResponseCode();
+                System.out.println("HTTP CODE: " + code);
+
+                BufferedReader br = new BufferedReader(
+                        new InputStreamReader(conn.getInputStream())
+                );
+
+                String line;
+                StringBuilder response = new StringBuilder();
+
+                while ((line = br.readLine()) != null) {
+                    response.append(line);
+                }
+
+                System.out.println(response.toString());
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -136,7 +168,14 @@ public class ProfilePageManager {
                     result.append(line);
                 }
 
-                byte[] decoded = android.util.Base64.decode(result.toString(), android.util.Base64.DEFAULT);
+                String base64 = result.toString().trim();
+
+                if (base64.isEmpty()) {
+                    callback.onFailure("No image found");
+                    return;
+                }
+
+                byte[] decoded = Base64.decode(base64, Base64.DEFAULT);
 
                 callback.onSuccess(decoded);
 

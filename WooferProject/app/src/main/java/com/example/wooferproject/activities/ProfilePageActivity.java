@@ -78,11 +78,6 @@ public class ProfilePageActivity extends AppCompatActivity {
             }
         });
 
-        // Loads the pic from local storage
-        if (savedUri != null) {
-            profileImage.setImageURI(Uri.parse(savedUri));
-        }
-
         // picks the pic
         imagePickerLauncher = registerForActivityResult(
                 new ActivityResultContracts.GetContent(),
@@ -142,7 +137,8 @@ public class ProfilePageActivity extends AppCompatActivity {
                     Bitmap bitmap = ((BitmapDrawable) profileImage.getDrawable()).getBitmap();
 
                     ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                    Bitmap resized = Bitmap.createScaledBitmap(bitmap, 300, 300, true);
+                    resized.compress(Bitmap.CompressFormat.JPEG, 70, stream);
 
                     byte[] imageBytes = stream.toByteArray();
 
