@@ -34,7 +34,7 @@ public class HomeScreenActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        userId = 1; //getIntent().getIntExtra("user_id", -1);
+        userId = getIntent().getIntExtra("user_id", -1);
 
 
         //sets the screen desgin - uses home xml screen code

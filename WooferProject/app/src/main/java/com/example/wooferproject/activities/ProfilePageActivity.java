@@ -42,10 +42,6 @@ public class ProfilePageActivity extends AppCompatActivity {
         setContentView(R.layout.profile_page);
 
         userId = getIntent().getIntExtra("user_id", -1);
-        if (userId == -1) {
-            // Fallback for safety
-            userId = 1;
-        }
 
         // UI
         name = findViewById(R.id.profile_name);

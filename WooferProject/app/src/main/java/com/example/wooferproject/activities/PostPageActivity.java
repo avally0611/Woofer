@@ -32,7 +32,7 @@ public class PostPageActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        userId = 1;//getIntent().getIntExtra("user_id", -1);
+        userId = getIntent().getIntExtra("user_id", -1);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.post_page);
 
