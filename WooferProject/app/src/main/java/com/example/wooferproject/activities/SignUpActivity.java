@@ -24,6 +24,7 @@ public class SignUpActivity extends AppCompatActivity {
     private EditText nameField, lastNameField, usernameField, emailField, passwordField;
     private TextView passwordCheckText, loginLink;
     private Button signUpBtn;
+    private SignUpManager signUpManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +40,8 @@ public class SignUpActivity extends AppCompatActivity {
         passwordCheckText = findViewById(R.id.PasswordCheck);
         signUpBtn = findViewById(R.id.SignUpBtn);
         loginLink = findViewById(R.id.loginLink);
+
+        signUpManager = new SignUpManager();
 
         // Provide real-time feedback for password as the user types
         setupPasswordWatcher();
@@ -112,7 +115,7 @@ public class SignUpActivity extends AppCompatActivity {
         }
 
         // Call the manager to register the user
-        SignUpManager.register(firstName, lastName, username, email, password, new SignUpManager.SignUpCallback() {
+        signUpManager.register(firstName, lastName, username, email, password, new SignUpManager.SignUpCallback() {
             @Override
             public void onSuccess(String message, int userId) {
                 // Save login state in SharedPreferences for session management

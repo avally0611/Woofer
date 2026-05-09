@@ -41,7 +41,11 @@ public class ProfilePageActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.profile_page);
 
-        userId = 1;//getIntent().getIntExtra("user_id", -1);
+        userId = getIntent().getIntExtra("user_id", -1);
+        if (userId == -1) {
+            // Fallback for safety
+            userId = 1;
+        }
 
         // UI
         name = findViewById(R.id.profile_name);
@@ -169,7 +173,18 @@ public class ProfilePageActivity extends AppCompatActivity {
 
         // logout
         logoutBtn.setOnClickListener(v -> {
-            startActivity(new Intent(this, SignUpActivity.class));
+            // Clear the saved login session from SharedPreferences
+            SharedPreferences loginPrefs = getSharedPreferences("WooferPrefs", MODE_PRIVATE);
+            loginPrefs.edit().clear().apply();
+
+            // Clear any profile-specific temporary cache
+            SharedPreferences profilePrefs = getSharedPreferences("profile", MODE_PRIVATE);
+            profilePrefs.edit().clear().apply();
+
+            // Redirect to Login Page and clear the activity stack
+            Intent intent = new Intent(ProfilePageActivity.this, LoginActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
             finish();
         });
 

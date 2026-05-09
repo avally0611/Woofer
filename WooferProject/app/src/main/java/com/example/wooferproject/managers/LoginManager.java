@@ -1,52 +1,65 @@
 package com.example.wooferproject.managers;
 
+import org.json.JSONException;
 import org.json.JSONObject;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
+
+import java.io.IOException;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class LoginManager {
+
+    private final OkHttpClient client = new OkHttpClient();
 
     public interface LoginCallback {
         void onSuccess(int userId);
         void onFailure(String error);
     }
 
-    public static void login(String username, String password, LoginCallback callback) {
-        new Thread(() -> {
-            try {
-                URL url = new URL("https://wmc.ms.wits.ac.za/students/sgroup2668/login.php");
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("POST");
-                conn.setDoOutput(true);
+    public void login(String username, String password, LoginCallback callback) {
+        RequestBody formBody = new FormBody.Builder()
+                .add("username", username)
+                .add("password", password)
+                .build();
 
-                String data = "username=" + username + "&password=" + password;
+        Request request = new Request.Builder()
+                .url("https://wmc.ms.wits.ac.za/students/sgroup2668/login.php")
+                .post(formBody)
+                .build();
 
-                OutputStream os = conn.getOutputStream();
-                os.write(data.getBytes());
-                os.flush();
-                os.close();
-
-                BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                StringBuilder result = new StringBuilder();
-                String line;
-                while ((line = br.readLine()) != null) {
-                    result.append(line);
-                }
-
-                JSONObject json = new JSONObject(result.toString());
-                if (json.getBoolean("success")) {
-                    int userId = json.getInt("user_id");
-                    callback.onSuccess(userId);
-                } else {
-                    callback.onFailure(json.getString("message"));
-                }
-
-            } catch (Exception e) {
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
                 callback.onFailure(e.getMessage());
             }
-        }).start();
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (!response.isSuccessful()) {
+                    callback.onFailure("Error " + response);
+                    return;
+                }
+
+                try {
+                    String responseData = response.body().string();
+                    JSONObject json = new JSONObject(responseData);
+
+                    if (json.getBoolean("success")) {
+                        int userId = json.getInt("user_id");
+                        callback.onSuccess(userId);
+                    } else {
+                        callback.onFailure(json.getString("message"));
+                    }
+                } catch (JSONException e) {
+                    callback.onFailure("JSON Error: " + e.getMessage());
+                }
+            }
+        });
     }
 }

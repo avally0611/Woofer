@@ -19,6 +19,7 @@ public class LoginActivity extends AppCompatActivity {
     private EditText usernameField, passwordField;
     private Button loginBtn, signUpBtn;
     private TextView forgotPasswordBtn;
+    private LoginManager loginManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +47,8 @@ public class LoginActivity extends AppCompatActivity {
         loginBtn = findViewById(R.id.loginBtn);
         signUpBtn = findViewById(R.id.signUpBtn);
         forgotPasswordBtn = findViewById(R.id.forgot);
+
+        loginManager = new LoginManager();
 
         // When login button is clicked, trigger the handleLogin logic
         loginBtn.setOnClickListener(v -> handleLogin());
@@ -88,7 +91,7 @@ public class LoginActivity extends AppCompatActivity {
         loginBtn.setEnabled(false);
 
         // Send the credentials to the LoginManager to perform the database query
-        LoginManager.login(username, password, new LoginManager.LoginCallback() {
+        loginManager.login(username, password, new LoginManager.LoginCallback() {
             @Override
             public void onSuccess(int userId) {
                 // Save login state in SharedPreferences

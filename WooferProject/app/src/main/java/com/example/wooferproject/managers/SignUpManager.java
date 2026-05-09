@@ -1,61 +1,68 @@
 package com.example.wooferproject.managers;
 
+import org.json.JSONException;
 import org.json.JSONObject;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
+
+import java.io.IOException;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class SignUpManager {
+
+    private final OkHttpClient client = new OkHttpClient();
 
     public interface SignUpCallback {
         void onSuccess(String message, int userId);
         void onFailure(String error);
     }
 
-    public static void register(String firstName, String lastName, String username, String email, String password, SignUpCallback callback) {
-        new Thread(() -> {
-            try {
-                // Connect to the registration script
-                URL url = new URL("https://wmc.ms.wits.ac.za/students/sgroup2668/signup.php");
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("POST");
-                conn.setDoOutput(true);
+    public void register(String firstName, String lastName, String username, String email, String password, SignUpCallback callback) {
+        RequestBody formBody = new FormBody.Builder()
+                .add("name", firstName)
+                .add("lastname", lastName)
+                .add("username", username)
+                .add("email", email)
+                .add("password", password)
+                .build();
 
-                // Prepare the data to be sent
-                String data = "name=" + firstName +
-                        "&lastname=" + lastName +
-                        "&username=" + username +
-                        "&email=" + email +
-                        "&password=" + password;
+        Request request = new Request.Builder()
+                .url("https://wmc.ms.wits.ac.za/students/sgroup2668/signup.php")
+                .post(formBody)
+                .build();
 
-                // Write the data to the output stream
-                OutputStream os = conn.getOutputStream();
-                os.write(data.getBytes());
-                os.flush();
-                os.close();
-
-                // Read the response from the server
-                BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                StringBuilder result = new StringBuilder();
-                String line;
-                while ((line = br.readLine()) != null) {
-                    result.append(line);
-                }
-
-                // Parse the JSON response
-                JSONObject json = new JSONObject(result.toString());
-                if (json.getBoolean("success")) {
-                    int userId = json.optInt("user_id", -1);
-                    callback.onSuccess(json.getString("message"), userId);
-                } else {
-                    callback.onFailure(json.getString("message"));
-                }
-
-            } catch (Exception e) {
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
                 callback.onFailure(e.getMessage());
             }
-        }).start();
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (!response.isSuccessful()) {
+                    callback.onFailure("Error " + response);
+                    return;
+                }
+
+                try {
+                    String responseData = response.body().string();
+                    JSONObject json = new JSONObject(responseData);
+
+                    if (json.getBoolean("success")) {
+                        int userId = json.optInt("user_id", -1);
+                        callback.onSuccess(json.getString("message"), userId);
+                    } else {
+                        callback.onFailure(json.getString("message"));
+                    }
+                } catch (JSONException e) {
+                    callback.onFailure("JSON Error: " + e.getMessage());
+                }
+            }
+        });
     }
 }
