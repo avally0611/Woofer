@@ -7,10 +7,14 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+import androidx.activity.result.ActivityResult;
+
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.activity.result.ActivityResultLauncher;
@@ -22,6 +26,7 @@ import com.example.wooferproject.models.User;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 public class ProfilePageActivity extends AppCompatActivity {
 
@@ -32,7 +37,7 @@ public class ProfilePageActivity extends AppCompatActivity {
     private int userId;
 
     boolean isEditing = false;
-    private ActivityResultLauncher<String> imagePickerLauncher;
+    private ActivityResultLauncher<Intent> imagePickerLauncher;
 
     private Uri selectedImageUri = null;
 
@@ -42,7 +47,10 @@ public class ProfilePageActivity extends AppCompatActivity {
         setContentView(R.layout.profile_page);
 
         userId = getIntent().getIntExtra("user_id", -1);
-
+        if (userId == -1) {
+            SharedPreferences loginPrefs = getSharedPreferences("WooferPrefs", MODE_PRIVATE);
+            userId = loginPrefs.getInt("user_id", -1);
+        }
         // UI
         name = findViewById(R.id.profile_name);
         username = findViewById(R.id.profile_username);
@@ -54,113 +62,50 @@ public class ProfilePageActivity extends AppCompatActivity {
         logoutBtn = findViewById(R.id.logout);
         profileImage = findViewById(R.id.imageView);
 
-        SharedPreferences prefs = getSharedPreferences("profile", MODE_PRIVATE);
-        String savedUri = prefs.getString("profile_image", null);
+        // Read only;
+        setEditMode(false);
+        if (userId != -1) {
+            loadProfileData();
+            loadProfileImage();
+        } else {
+            Toast.makeText(this, "User session expired. Please login again.", Toast.LENGTH_LONG).show();
+            // Optional: Redirect to login
+        }
 
-        resetPassword.setEnabled(false);
-        resetPassword.setClickable(false);
-        resetPassword.setAlpha(0.4f);
-
-        // Loads the profile data
-        ProfilePageManager.getProfile(userId, new ProfilePageManager.Callback() {
-            @Override
-            public void onSuccess(User user) {
-                runOnUiThread(() -> {
-                    name.setText(user.name);
-                    username.setText(user.username);
-                    email.setText(user.email);
-                });
-            }
-
-            @Override
-            public void onFailure(String error) {
-                runOnUiThread(() -> email.setText("Failed to load profile"));
-            }
-        });
 
         // picks the pic
         imagePickerLauncher = registerForActivityResult(
-                new ActivityResultContracts.GetContent(),
-                uri -> {
-                    if (uri != null) {
-                        selectedImageUri = uri;
-                        profileImage.setImageURI(uri);
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        selectedImageUri = result.getData().getData();
+                        try {
+                            Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), selectedImageUri);
+                            profileImage.setImageBitmap(bitmap);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
         );
 
         profileImage.setOnClickListener(v -> {
             if (isEditing) {
-                imagePickerLauncher.launch("image/*");
+                Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                imagePickerLauncher.launch(intent);
             }
         });
 
-        profileImage.setClickable(false);
-        profileImage.setAlpha(0.6f);
 
         // Edit and save button
         editBtn.setOnClickListener(v -> {
 
-            if (!isEditing) {
-
-                // edit profile
-                name.setEnabled(true);
-                username.setEnabled(true);
-                email.setEnabled(true);
-
-                profileImage.setClickable(true);
-                profileImage.setAlpha(1.0f);
-
-                resetPassword.setEnabled(true);
-                resetPassword.setClickable(true);
-                resetPassword.setAlpha(1.0f);
-
-                editBtn.setText("Save");
-                isEditing = true;
-
-            } else {
-
-                // Save profile
-                ProfilePageManager.updateProfile(
-                        userId,
-                        name.getText().toString(),
-                        username.getText().toString(),
-                        email.getText().toString()
-                );
-
-                // Save the image if its changed
-                if (selectedImageUri != null && profileImage.getDrawable() != null) {
-
-                    profileImage.setDrawingCacheEnabled(true);
-                    profileImage.buildDrawingCache();
-
-                    Bitmap bitmap = ((BitmapDrawable) profileImage.getDrawable()).getBitmap();
-
-                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                    Bitmap resized = Bitmap.createScaledBitmap(bitmap, 300, 300, true);
-                    resized.compress(Bitmap.CompressFormat.JPEG, 70, stream);
-
-                    byte[] imageBytes = stream.toByteArray();
-
-                    ProfilePageManager.uploadProfileImage(userId, imageBytes);
-                }
-
-                // disable the edit mode
-                name.setEnabled(false);
-                username.setEnabled(false);
-                email.setEnabled(false);
-
-                profileImage.setClickable(false);
-                profileImage.setAlpha(0.6f);
-
-                resetPassword.setEnabled(false);
-                resetPassword.setClickable(false);
-                resetPassword.setAlpha(0.4f);
-
-                editBtn.setText("Edit Profile");
-                isEditing = false;
-            }
-        });
+                    if (!isEditing) {
+                        setEditMode(true);
+                    } else {
+                        saveProfile();
+                    }
+                });
 
         // reset password
         resetPassword.setOnClickListener(v -> {
@@ -173,10 +118,6 @@ public class ProfilePageActivity extends AppCompatActivity {
             SharedPreferences loginPrefs = getSharedPreferences("WooferPrefs", MODE_PRIVATE);
             loginPrefs.edit().clear().apply();
 
-            // Clear any profile-specific temporary cache
-            SharedPreferences profilePrefs = getSharedPreferences("profile", MODE_PRIVATE);
-            profilePrefs.edit().clear().apply();
-
             // Redirect to Login Page and clear the activity stack
             Intent intent = new Intent(ProfilePageActivity.this, LoginActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -184,7 +125,31 @@ public class ProfilePageActivity extends AppCompatActivity {
             finish();
         });
 
-        // Load the image from the database
+        // Bottom navigation
+        BottomNavigationView bottomNav = findViewById(R.id.navigationBar);
+        setupBottomNav(bottomNav);
+        bottomNav.setSelectedItemId(R.id.profile);
+    }
+
+    private void loadProfileData() {
+        ProfilePageManager.getProfile(userId, new ProfilePageManager.Callback() {
+            @Override
+            public void onSuccess(User user) {
+                runOnUiThread(() -> {
+                    name.setText(user.name);
+                    username.setText(user.username);
+                    email.setText(user.email);
+                });
+            }
+
+            @Override
+            public void onFailure(String error) {
+                runOnUiThread(() -> Toast.makeText(ProfilePageActivity.this, "Failed to load profile", Toast.LENGTH_SHORT).show());
+            }
+        });
+    }
+
+    private void loadProfileImage() {
         ProfilePageManager.getProfileImage(userId, new ProfilePageManager.ImageCallback() {
             @Override
             public void onSuccess(byte[] image) {
@@ -196,14 +161,58 @@ public class ProfilePageActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(String error) {
-                System.out.println(error);
+                runOnUiThread(() -> profileImage.setImageResource(R.drawable.profile));
             }
         });
+    }
 
-        // Bottom navigation
-        BottomNavigationView bottomNav = findViewById(R.id.navigationBar);
-        setupBottomNav(bottomNav);
-        bottomNav.setSelectedItemId(R.id.profile);
+    private void setEditMode(boolean enable) {
+        isEditing = enable;
+        name.setEnabled(enable);
+        username.setEnabled(enable);
+        email.setEnabled(enable);
+        profileImage.setClickable(enable);
+        profileImage.setAlpha(enable ? 1.0f : 0.6f);
+        resetPassword.setEnabled(enable);
+        resetPassword.setClickable(enable);
+        resetPassword.setAlpha(enable ? 1.0f : 0.4f);
+        editBtn.setText(enable ? "Save" : "Edit Profile");
+    }
+
+    private void saveProfile() {
+
+        // Save text details
+        ProfilePageManager.updateProfile(
+                userId,
+                name.getText().toString(),
+                username.getText().toString(),
+                email.getText().toString()
+        );
+
+        // Save image
+        if (profileImage.getDrawable() != null) {
+
+            Bitmap bitmap = ((BitmapDrawable) profileImage.getDrawable()).getBitmap();
+
+            // Resize image
+            Bitmap resized = Bitmap.createScaledBitmap(bitmap, 300, 300, true);
+
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+
+            resized.compress(Bitmap.CompressFormat.JPEG, 80, stream);
+
+            byte[] imageBytes = stream.toByteArray();
+            Toast.makeText(this,
+                    "Image size: " + imageBytes.length,
+                    Toast.LENGTH_LONG).show();
+
+            // Upload image
+            ProfilePageManager.uploadProfileImage(userId, imageBytes);
+        }
+
+        Toast.makeText(this, "Profile Updated", Toast.LENGTH_SHORT).show();
+
+        setEditMode(false);
     }
 
     protected void setupBottomNav(BottomNavigationView bottomNav) {

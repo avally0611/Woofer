@@ -19,15 +19,18 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.example.wooferproject.managers.PostPageManager;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 public class PostPageActivity extends AppCompatActivity {
     private int userId;
+    private int postID;
+    private ActivityResultLauncher<Intent> imagePickerLauncher;
+    private Uri selectedImageUri = null;
+    private ImageView postImage;
     EditText caption;
     TextView locationText;
     Button imageBtn, postBtn;
     ImageView imageView;
-
-    Uri selectedImageUri;
     ActivityResultLauncher<String> imagePicker;
 
     @Override
@@ -43,19 +46,32 @@ public class PostPageActivity extends AppCompatActivity {
         imageView = findViewById(R.id.imageView);
         postBtn = findViewById(R.id.postButton);
 
+        imageBtn.setOnClickListener(v -> {
+
+            Intent intent = new Intent(
+                    Intent.ACTION_PICK,
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+            );
+
+            imagePickerLauncher.launch(intent);
+        });
+
         // this picks the picture
-        imagePicker = registerForActivityResult(
-                new ActivityResultContracts.GetContent(),
-                uri -> {
-                    if (uri != null) {
-                        selectedImageUri = uri;
-                        imageView.setImageURI(uri);
+        imagePickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        selectedImageUri = result.getData().getData();
+                        try {
+                            Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), selectedImageUri);
+                            imageView.setImageBitmap(bitmap);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
         );
-        imageBtn.setOnClickListener(v -> {
-            imagePicker.launch("image/*");
-        });
+
 
         // this posts the posts;
         postBtn.setOnClickListener(v -> {
@@ -130,14 +146,24 @@ public class PostPageActivity extends AppCompatActivity {
     }
     // this function turns the picture into bytes;
     private byte[] getImageBytes(Uri uri) {
+
+        if (uri == null) return null;
+
         try {
+
             Bitmap bitmap = MediaStore.Images.Media.getBitmap(
-                    this.getContentResolver(), uri);
+                    this.getContentResolver(),
+                    uri
+            );
+
+            Bitmap resized = Bitmap.createScaledBitmap(bitmap, 500, 500, true);
 
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+
+            resized.compress(Bitmap.CompressFormat.JPEG, 80, stream);
 
             return stream.toByteArray();
+
         } catch (Exception e) {
             e.printStackTrace();
             return null;

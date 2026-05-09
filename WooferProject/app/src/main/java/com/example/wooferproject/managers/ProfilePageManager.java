@@ -1,11 +1,8 @@
 package com.example.wooferproject.managers;
 
 import android.util.Base64;
-
 import com.example.wooferproject.models.User;
-
 import org.json.JSONObject;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataOutputStream;
@@ -17,7 +14,7 @@ import java.net.URL;
 
 public class ProfilePageManager {
 
-    // UPDATE PROFILE
+    // Update the profile
     public static void updateProfile(int userId, String name, String username, String email) {
 
         new Thread(() -> {
@@ -38,7 +35,6 @@ public class ProfilePageManager {
                 os.write(data.getBytes());
                 os.flush();
                 os.close();
-
                 conn.getInputStream();
 
             } catch (Exception e) {
@@ -47,7 +43,7 @@ public class ProfilePageManager {
         }).start();
     }
 
-    // GET PROFILE
+    // Get the profile
     public static void getProfile(int userId, Callback callback) {
 
         new Thread(() -> {
@@ -108,8 +104,7 @@ public class ProfilePageManager {
                 conn.setDoOutput(true);
                 conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
 
-                OutputStream os = conn.getOutputStream();
-                DataOutputStream dos = new DataOutputStream(os);
+                DataOutputStream dos = new DataOutputStream(conn.getOutputStream());
 
                 // user id
                 dos.writeBytes("--" + boundary + "\r\n");
@@ -127,27 +122,13 @@ public class ProfilePageManager {
                 dos.flush();
                 dos.close();
 
-                int code = conn.getResponseCode();
-                System.out.println("HTTP CODE: " + code);
-
-                BufferedReader br = new BufferedReader(
-                        new InputStreamReader(conn.getInputStream())
-                );
-
-                String line;
-                StringBuilder response = new StringBuilder();
-
-                while ((line = br.readLine()) != null) {
-                    response.append(line);
-                }
-
-                System.out.println(response.toString());
-
+                conn.getResponseCode(); // Trigger request
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }).start();
     }
+
     // this geta the image from the database
     public static void getProfileImage(int userId, ImageCallback callback) {
 
@@ -156,6 +137,7 @@ public class ProfilePageManager {
                 URL url = new URL("https://wmc.ms.wits.ac.za/students/sgroup2668/get_profile_pic.php?id=" + userId);
 
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
 
                 BufferedReader br = new BufferedReader(
                         new InputStreamReader(conn.getInputStream())
