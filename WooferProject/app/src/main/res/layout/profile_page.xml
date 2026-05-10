@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -21,14 +22,24 @@
         android:layout_width="165dp"
         android:layout_height="161dp"
         android:layout_marginTop="32dp"
+        android:src="@drawable/profile"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:src="@drawable/profile" />
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/editProfile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Edit Profile"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageView" />
 
     <EditText
         android:id="@+id/profile_name"
-        android:layout_width="315dp"
+        android:layout_width="0dp"
         android:layout_height="60dp"
         android:layout_marginStart="48dp"
         android:layout_marginEnd="48dp"
@@ -38,42 +49,13 @@
         android:textSize="18sp"
         app:layout_constraintBottom_toTopOf="@+id/profile_username"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editProfile"
         app:layout_constraintVertical_chainStyle="spread" />
 
-    <TextView
-        android:id="@+id/profile_reset_password"
-        android:layout_width="315dp"
-        android:layout_height="60dp"
-        android:layout_marginStart="48dp"
-        android:layout_marginEnd="48dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center"
-        android:text="Reset Password"
-        android:textColor="@color/black"
-        app:layout_constraintBottom_toTopOf="@+id/logout"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/profile_password" />
-
-    <Button
-        android:id="@+id/editProfile"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="64dp"
-        android:text="Edit Profile"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView" />
-
     <EditText
         android:id="@+id/profile_username"
-        android:layout_width="315dp"
+        android:layout_width="0dp"
         android:layout_height="60dp"
         android:layout_marginStart="48dp"
         android:layout_marginEnd="48dp"
@@ -83,13 +65,12 @@
         android:textSize="18sp"
         app:layout_constraintBottom_toTopOf="@+id/profile_email"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/profile_name" />
 
     <EditText
         android:id="@+id/profile_email"
-        android:layout_width="315dp"
+        android:layout_width="0dp"
         android:layout_height="60dp"
         android:layout_marginStart="48dp"
         android:layout_marginEnd="48dp"
@@ -99,13 +80,12 @@
         android:textSize="18sp"
         app:layout_constraintBottom_toTopOf="@+id/profile_password"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/profile_username" />
 
     <TextView
         android:id="@+id/profile_password"
-        android:layout_width="315dp"
+        android:layout_width="0dp"
         android:layout_height="60dp"
         android:layout_marginStart="48dp"
         android:layout_marginEnd="48dp"
@@ -114,15 +94,32 @@
         android:textSize="18sp"
         app:layout_constraintBottom_toTopOf="@+id/profile_reset_password"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/profile_email" />
+
+    <TextView
+        android:id="@+id/profile_reset_password"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:layout_marginStart="48dp"
+        android:layout_marginEnd="48dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:text="Reset Password"
+        android:textColor="#A42323"
+        app:layout_constraintBottom_toTopOf="@+id/buttons_container"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/profile_password" />
 
     <LinearLayout
         android:id="@+id/buttons_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
         android:orientation="horizontal"
+        app:layout_constraintBottom_toTopOf="@+id/navigationBar"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/profile_reset_password">
@@ -131,7 +128,6 @@
             android:id="@+id/logout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
             android:text="Logout" />
 
         <Button
@@ -143,6 +139,7 @@
             android:textColor="#FFFFFF"
             android:visibility="gone" />
     </LinearLayout>
+
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/navigationBar"
         android:layout_width="0dp"
@@ -150,7 +147,6 @@
         app:labelVisibilityMode="labeled"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:menu="@menu/bottom_menu" />
 

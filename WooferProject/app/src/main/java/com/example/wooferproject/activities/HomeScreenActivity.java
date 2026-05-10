@@ -50,10 +50,9 @@ public class HomeScreenActivity extends AppCompatActivity
         recyclerView.setAdapter(adapter);
 
 
-        //now we initalise the homescreen manager object so we can actually get the posts list from backend
+        // Initialise the manager and use the actual logged-in userId to fetch posts
         homeScreenManager = new HomeScreenManager();
-        //just like in homescreen manager we just pop the two methods from interface for returning message when getting result from db
-        homeScreenManager.getPosts(2, new PostCallback()
+        homeScreenManager.getPosts(userId, new PostCallback()
         {
             @Override
             public void onSuccess(ArrayList<Post> fetchedPosts)
