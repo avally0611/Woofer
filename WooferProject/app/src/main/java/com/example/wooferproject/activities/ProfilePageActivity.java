@@ -285,20 +285,19 @@ public class ProfilePageActivity extends AppCompatActivity {
     protected void setupBottomNav(BottomNavigationView bottomNav) {
         bottomNav.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
-            if (id == R.id.home) {
-                Intent intent = new Intent(this, HomeScreenActivity.class);
+
+            // If they click 'Profile' while editing, just go back to the PreProfile screen
+
+            Intent intent = null;
+            if (id == R.id.home) intent = new Intent(this, HomeScreenActivity.class);
+            else if (id == R.id.search) intent = new Intent(this, SearchActivity.class);
+            else if (id == R.id.add) intent = new Intent(this, PostPageActivity.class);
+
+            if (intent != null) {
                 intent.putExtra("user_id", userId);
+                intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                 startActivity(intent);
-                return true;
-            } else if (id == R.id.search) {
-                Intent intent = new Intent(this, SearchActivity.class);
-                intent.putExtra("user_id", userId);
-                startActivity(intent);
-                return true;
-            } else if (id == R.id.add) {
-                Intent intent = new Intent(this, PostPageActivity.class);
-                intent.putExtra("user_id", userId);
-                startActivity(intent);
+                finish(); // Close the edit screen when moving to a new section
                 return true;
             }
             return false;

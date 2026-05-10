@@ -9,8 +9,9 @@
         android:id="@+id/pre_profile_image"
         android:layout_width="100dp"
         android:layout_height="100dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="40dp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -64,8 +65,8 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/pre_profile_posts_recyclerview"
-        android:layout_width="400dp"
-        android:layout_height="479dp"
+        android:layout_width="393dp"
+        android:layout_height="444dp"
         app:layout_constraintBottom_toTopOf="@+id/navigationBar"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.454"

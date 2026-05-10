@@ -2,6 +2,8 @@ package com.example.wooferproject.managers;
 
 import static android.content.ContentValues.TAG;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Base64;
 import android.util.Log;
 
@@ -141,6 +143,12 @@ public class ProfilePageManager {
                 dos.close();
 
                 conn.getResponseCode(); // Trigger request
+                int responseCode = conn.getResponseCode();
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    Log.d(TAG, "Image upload successful");
+                } else {
+                    Log.e(TAG, "Image upload failed with code: " + responseCode);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -149,38 +157,34 @@ public class ProfilePageManager {
 
     // this geta the image from the database
     public static void getProfileImage(int userId, ImageCallback callback) {
-
         new Thread(() -> {
             try {
-                URL url = new URL("https://wmc.ms.wits.ac.za/students/sgroup2668/get_profile_pic.php?id=" + userId);
+                long timestamp = System.currentTimeMillis();
+                URL url = new URL(BASE_URL + "get_profile_pic.php?id=" + userId + "&t=" + timestamp);
 
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
+                conn.setUseCaches(false); // Disable caching at the connection level
 
-                BufferedReader br = new BufferedReader(
-                        new InputStreamReader(conn.getInputStream())
-                );
-
-                String line;
+                BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
                 StringBuilder result = new StringBuilder();
-
+                String line;
                 while ((line = br.readLine()) != null) {
                     result.append(line);
                 }
+                br.close();
 
                 String base64 = result.toString().trim();
+                Handler mainHandler = new Handler(Looper.getMainLooper());
 
-                if (base64.isEmpty()) {
-                    callback.onFailure("No image found");
-                    return;
+                if (base64.isEmpty() || base64.equals("null")) {
+                    mainHandler.post(() -> callback.onFailure("No image found"));
+                } else {
+                    byte[] decoded = Base64.decode(base64, Base64.DEFAULT);
+                    mainHandler.post(() -> callback.onSuccess(decoded));
                 }
-
-                byte[] decoded = Base64.decode(base64, Base64.DEFAULT);
-
-                callback.onSuccess(decoded);
-
             } catch (Exception e) {
-                callback.onFailure(e.getMessage());
+                new Handler(Looper.getMainLooper()).post(() -> callback.onFailure(e.getMessage()));
             }
         }).start();
     }

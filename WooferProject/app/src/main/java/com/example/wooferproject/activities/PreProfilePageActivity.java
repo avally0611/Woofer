@@ -168,22 +168,41 @@ public class PreProfilePageActivity extends AppCompatActivity {
     }
 
     protected void setupBottomNav(BottomNavigationView bottomNav) {
+
         bottomNav.setOnItemSelectedListener(item -> {
+
             int id = item.getItemId();
-            // Note: Ensure these activities and IDs exist in your project
+
             if (id == R.id.home) {
-                startActivity(new Intent(this, HomeScreenActivity.class).putExtra("user_id", userId));
+                Intent intent = new Intent(this, HomeScreenActivity.class);
+                intent.putExtra("user_id", userId);
+                startActivity(intent);
+
                 return true;
+
             } else if (id == R.id.search) {
-                startActivity(new Intent(this, SearchActivity.class).putExtra("user_id", userId));
+
+                Intent intent = new Intent(this, SearchActivity.class);
+                intent.putExtra("user_id", userId);
+                startActivity(intent);
+
                 return true;
+
             } else if (id == R.id.add) {
-                startActivity(new Intent(this, PostPageActivity.class).putExtra("user_id", userId));
+
+                Intent intent = new Intent(this, PostPageActivity.class);
+                intent.putExtra("user_id", userId);
+                startActivity(intent);
+
                 return true;
+
             } else if (id == R.id.profile) {
+
                 return true;
             }
+
             return false;
         });
     }
+
 }
