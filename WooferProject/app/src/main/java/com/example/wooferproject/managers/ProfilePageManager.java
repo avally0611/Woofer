@@ -1,7 +1,16 @@
 package com.example.wooferproject.managers;
 
+import static android.content.ContentValues.TAG;
+
 import android.util.Base64;
+import android.util.Log;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.StringRequest;
 import com.example.wooferproject.models.User;
+
+import org.json.JSONException;
 import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -13,6 +22,10 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 public class ProfilePageManager {
+
+    private static final String TAG = "ProfilePageManager";
+    private static RequestQueue requestQueue;
+    private static final String BASE_URL = "https://wmc.ms.wits.ac.za/students/sgroup2668/";
 
     // Update the profile
     public static void updateProfile(int userId, String name, String username, String email) {
@@ -90,6 +103,11 @@ public class ProfilePageManager {
         void onSuccess(User user);
         void onFailure(String error);
     }
+    // this is for deleting account
+    public interface DeleteCallback {
+        void onSuccess();
+        void onFailure(String error);
+    }
     // this is for profile image
     public static void uploadProfileImage(int userId, byte[] imageBytes) {
 
@@ -165,6 +183,38 @@ public class ProfilePageManager {
                 callback.onFailure(e.getMessage());
             }
         }).start();
+    }
+    public static void deleteAccount(int userId, DeleteCallback callback) {
+        if (requestQueue == null) {
+            callback.onFailure("RequestQueue not initialized.");
+            return;
+        }
+
+        String url = BASE_URL + "delete_account.php?id=" + userId;
+
+        StringRequest deleteRequest = new StringRequest(
+                Request.Method.GET,
+                url,
+                response -> {
+                    try {
+                        JSONObject jsonResponse = new JSONObject(response);
+                        if (jsonResponse.getBoolean("success")) {
+                            callback.onSuccess();
+                        } else {
+                            callback.onFailure(jsonResponse.optString("message", "Failed to delete account"));
+                        }
+                    } catch (JSONException e) {
+                        Log.e(TAG, "Delete parse error", e);
+                        callback.onFailure("Parse error during deletion");
+                    }
+                },
+                error -> {
+                    Log.e(TAG, "Delete network error", error);
+                    callback.onFailure("Network error: " + error.getMessage());
+                }
+        );
+
+        requestQueue.add(deleteRequest);
     }
 
     public interface ImageCallback {

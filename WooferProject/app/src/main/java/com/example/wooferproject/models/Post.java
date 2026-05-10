@@ -35,6 +35,5 @@ public class Post {
         return location;
     }
 
-
-
+    public String getImage() {return image;}
 }

@@ -196,7 +196,7 @@ public class PostPageActivity extends AppCompatActivity {
                 return true;
 
             } else if (id == R.id.profile) {
-                Intent intent = new Intent(this, ProfilePageActivity.class);
+                Intent intent = new Intent(this, PreProfilePageActivity.class);
                 intent.putExtra("user_id", userId);
                 startActivity(intent);
 

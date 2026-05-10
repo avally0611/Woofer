@@ -10,12 +10,14 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.activity.result.ActivityResult;
 
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -32,8 +34,9 @@ public class ProfilePageActivity extends AppCompatActivity {
 
     EditText name, username, email;
     TextView password, resetPassword;
-    Button editBtn, logoutBtn;
+    Button editBtn, logoutBtn,deleteBtn;
     ImageView profileImage;
+    ImageButton returnBtn;
     private int userId;
 
     boolean isEditing = false;
@@ -57,7 +60,8 @@ public class ProfilePageActivity extends AppCompatActivity {
         email = findViewById(R.id.profile_email);
         password = findViewById(R.id.profile_password);
         resetPassword = findViewById(R.id.profile_reset_password);
-
+        deleteBtn = findViewById(R.id.delete_account);
+        returnBtn = findViewById(R.id.return_profile);
         editBtn = findViewById(R.id.editProfile);
         logoutBtn = findViewById(R.id.logout);
         profileImage = findViewById(R.id.imageView);
@@ -70,6 +74,20 @@ public class ProfilePageActivity extends AppCompatActivity {
         } else {
             Toast.makeText(this, "User session expired. Please login again.", Toast.LENGTH_LONG).show();
             // Optional: Redirect to login
+        }
+
+        if (returnBtn != null) {
+            returnBtn.setOnClickListener(v -> {
+                // Simply finish this activity to go back to PreProfilePageActivity
+                finish();
+            });
+        }
+
+        // Delete Account Logic
+        if (deleteBtn != null) {
+            deleteBtn.setOnClickListener(v -> {
+                showDeleteConfirmationDialog();
+            });
         }
 
 
@@ -124,11 +142,19 @@ public class ProfilePageActivity extends AppCompatActivity {
             startActivity(intent);
             finish();
         });
+        if (logoutBtn != null) {
+            logoutBtn.setOnClickListener(v -> {
+                performLogout();
+            });
+        }
 
-        // Bottom navigation
+        // bottom navigation
         BottomNavigationView bottomNav = findViewById(R.id.navigationBar);
         setupBottomNav(bottomNav);
+
+        // highlight current tab
         bottomNav.setSelectedItemId(R.id.profile);
+
     }
 
     private void loadProfileData() {
@@ -165,6 +191,45 @@ public class ProfilePageActivity extends AppCompatActivity {
             }
         });
     }
+    private void showDeleteConfirmationDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Delete Account")
+                .setMessage("Are you sure you want to delete your account? This action cannot be undone.")
+                .setPositiveButton("Delete", (dialog, which) -> {
+                    deleteAccount();
+                })
+                .setNegativeButton("Cancel", null)
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .show();
+    }
+
+    private void deleteAccount() {
+        // Assuming you add a deleteAccount method to your ProfilePageManager
+        ProfilePageManager.deleteAccount(userId, new ProfilePageManager.DeleteCallback() {
+            @Override
+            public void onSuccess() {
+                runOnUiThread(() -> {
+                    Toast.makeText(ProfilePageActivity.this, "Account Deleted", Toast.LENGTH_LONG).show();
+                    performLogout();
+                });
+            }
+
+            @Override
+            public void onFailure(String error) {
+                runOnUiThread(() -> {
+                    Toast.makeText(ProfilePageActivity.this, "Failed to delete account: " + error, Toast.LENGTH_SHORT).show();
+                });
+            }
+        });
+    }
+    private void performLogout() {
+        SharedPreferences loginPrefs = getSharedPreferences("WooferPrefs", MODE_PRIVATE);
+        loginPrefs.edit().clear().apply();
+        Intent intent = new Intent(ProfilePageActivity.this, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+    }
 
     private void setEditMode(boolean enable) {
         isEditing = enable;
@@ -177,6 +242,9 @@ public class ProfilePageActivity extends AppCompatActivity {
         resetPassword.setClickable(enable);
         resetPassword.setAlpha(enable ? 1.0f : 0.4f);
         editBtn.setText(enable ? "Save" : "Edit Profile");
+        if (deleteBtn != null) {
+            deleteBtn.setVisibility(enable ? android.view.View.VISIBLE : android.view.View.GONE);
+        }
     }
 
     private void saveProfile() {
@@ -214,43 +282,27 @@ public class ProfilePageActivity extends AppCompatActivity {
 
         setEditMode(false);
     }
-
     protected void setupBottomNav(BottomNavigationView bottomNav) {
-
         bottomNav.setOnItemSelectedListener(item -> {
-
             int id = item.getItemId();
-
             if (id == R.id.home) {
-
                 Intent intent = new Intent(this, HomeScreenActivity.class);
                 intent.putExtra("user_id", userId);
                 startActivity(intent);
-
                 return true;
-
             } else if (id == R.id.search) {
-
                 Intent intent = new Intent(this, SearchActivity.class);
                 intent.putExtra("user_id", userId);
                 startActivity(intent);
-
                 return true;
-
             } else if (id == R.id.add) {
-
                 Intent intent = new Intent(this, PostPageActivity.class);
                 intent.putExtra("user_id", userId);
                 startActivity(intent);
-
-                return true;
-
-            } else if (id == R.id.profile) {
-
                 return true;
             }
-
             return false;
         });
     }
+
 }

@@ -32,6 +32,7 @@
         <activity android:name=".activities.SignUpActivity" />
         <activity android:name=".activities.SearchActivity" />
         <activity android:name=".activities.PostPageActivity" />
+        <activity android:name=".activities.PreProfilePageActivity" />
     </application>
 
 </manifest>

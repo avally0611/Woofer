@@ -12,6 +12,7 @@ import com.example.wooferproject.R;
 import com.example.wooferproject.models.Post;
 
 import java.util.ArrayList;
+import java.util.List;
 
 //so recycler view has a built in adapter but we have to make our own specific to the project so we make our own object that extends the recycler object's mrthods
 public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder>
@@ -68,6 +69,12 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             location = itemView.findViewById(R.id.postLocation);
             text = itemView.findViewById(R.id.postText);
         }
+    }
+    public void updatePosts(List<Post> newPosts)
+    {
+        posts.clear();
+        posts.addAll(newPosts);
+        notifyDataSetChanged();
     }
 
 }
