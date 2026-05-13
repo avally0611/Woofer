@@ -1,4 +1,4 @@
-package com.example.wooferproject.activities;
+          package com.example.wooferproject.activities;
 
 //so acitivty files just deal with frontend - basically communicate with screen and user input and stuff
 //okay so after some research i have decided ot use a recycler view - basically it like shows a limited amount of posts from the many we get from db and as you scroll down it populates with newwer posts
@@ -34,6 +34,7 @@ public class HomeScreenActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //gets user id from other screen
         userId = getIntent().getIntExtra("user_id", -1);
 
 

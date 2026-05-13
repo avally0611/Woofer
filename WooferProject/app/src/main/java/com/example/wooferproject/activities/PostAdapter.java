@@ -1,8 +1,12 @@
 package com.example.wooferproject.activities;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -46,6 +50,26 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         holder.username.setText(currPost.getUsername());
         holder.location.setText(currPost.getLocation());
         holder.text.setText(currPost.getText());
+
+        String imgString = currPost.getImage();
+
+        if (imgString != null && !imgString.isEmpty())
+        {
+            //so the image was sent in base 64 string format so dstabae could hold image nicely - decode back to byte array
+            byte[] decodedString = Base64.decode(imgString, Base64.DEFAULT);
+            //now we convert the byte array into a bitmap picture - now in prop pic format
+            Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+
+            //now we can take image and set it to imageview attribute
+            holder.image.setImageBitmap(decodedByte);
+            holder.image.setVisibility(View.VISIBLE);
+
+        }
+        else
+        {
+            //if now image, rememebr image view doesnt get populated and we hdie it so it doesn tlook weird
+            holder.image.setVisibility(View.GONE);
+        }
     }
 
     //need this to tell recycler view how many cards exist in view
@@ -61,6 +85,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
     public static class PostViewHolder extends RecyclerView.ViewHolder
     {
         TextView username, location, text;
+        ImageView image;
 
         public PostViewHolder(@NonNull View itemView)
         {
@@ -68,6 +93,8 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             username = itemView.findViewById(R.id.postUser);
             location = itemView.findViewById(R.id.postLocation);
             text = itemView.findViewById(R.id.postText);
+            image = itemView.findViewById(R.id.postImage);
+
         }
     }
     public void updatePosts(List<Post> newPosts)
