@@ -35,8 +35,9 @@ public class PreProfilePageManager {
     private static final String GET_PROFILE_DETAILS_URL = BASE_URL + "get_profile.php";
     private static final String GET_PROFILE_IMAGE_URL = BASE_URL + "get_profile_pic.php";
     private static final String GET_COUNTS_URL = BASE_URL + "get_profile_counts.php";
-    // FIXED: Changed URL to match the PHP filename
     private static final String GET_POSTS_URL = BASE_URL + "get_post_pic.php";
+    private static final String GET_FRIENDS_URL = BASE_URL + "get_friends.php";
+    private static final String UNFRIEND_URL = BASE_URL + "unfriend.php";
 
     public interface ProfileDetailsCallback {
         void onSuccess(User user, int postCount, int friendCount);
@@ -55,6 +56,16 @@ public class PreProfilePageManager {
 
     public interface PostsCallback {
         void onSuccess(List<Post> posts);
+        void onFailure(String error);
+    }
+
+    public interface FriendsCallback {
+        void onSuccess(List<User> friends);
+        void onFailure(String error);
+    }
+
+    public interface UnfriendCallback {
+        void onSuccess(String message);
         void onFailure(String error);
     }
 
@@ -206,7 +217,6 @@ public class PreProfilePageManager {
                 br.close();
 
                 String base64 = result.toString().trim();
-                // FIXED: Use Handler to return result on Main Thread to avoid crashes
                 Handler mainHandler = new Handler(Looper.getMainLooper());
 
                 if (base64.isEmpty() || base64.equals("null")) {
@@ -224,5 +234,73 @@ public class PreProfilePageManager {
                 new Handler(Looper.getMainLooper()).post(() -> callback.onFailure("Error: " + e.getMessage()));
             }
         }).start();
+    }
+
+    public static void getFriends(int userId, FriendsCallback callback) {
+        if (requestQueue == null) {
+            callback.onFailure("RequestQueue not initialized.");
+            return;
+        }
+
+        StringRequest friendsRequest = new StringRequest(
+                Request.Method.GET,
+                GET_FRIENDS_URL + "?user_id=" + userId,
+                response -> {
+                    try {
+                        JSONObject jsonResponse = new JSONObject(response);
+                        if (jsonResponse.getBoolean("success")) {
+                            JSONArray jsonArray = jsonResponse.getJSONArray("friends");
+                            List<User> friends = new ArrayList<>();
+                            for (int i = 0; i < jsonArray.length(); i++) {
+                                JSONObject obj = jsonArray.getJSONObject(i);
+                                friends.add(new User(obj.getInt("id"), obj.getString("username"), ""));
+                            }
+                            callback.onSuccess(friends);
+                        } else {
+                            callback.onFailure(jsonResponse.optString("message", "Failed to load friends"));
+                        }
+                    } catch (JSONException e) {
+                        Log.e(TAG, "Friends parse error", e);
+                        callback.onFailure("Failed to parse friends list");
+                    }
+                },
+                error -> callback.onFailure("Network error fetching friends")
+        );
+        requestQueue.add(friendsRequest);
+    }
+
+    public static void unfriend(int userId, int friendId, UnfriendCallback callback) {
+        if (requestQueue == null) {
+            callback.onFailure("RequestQueue not initialized.");
+            return;
+        }
+
+        StringRequest unfriendRequest = new StringRequest(
+                Request.Method.POST,
+                UNFRIEND_URL,
+                response -> {
+                    try {
+                        JSONObject jsonResponse = new JSONObject(response);
+                        if (jsonResponse.getBoolean("success")) {
+                            callback.onSuccess(jsonResponse.getString("message"));
+                        } else {
+                            callback.onFailure(jsonResponse.optString("message", "Failed to unfriend"));
+                        }
+                    } catch (JSONException e) {
+                        Log.e(TAG, "Unfriend parse error", e);
+                        callback.onFailure("Failed to parse unfriend response");
+                    }
+                },
+                error -> callback.onFailure("Network error unfriending: " + error.getMessage())
+        ) {
+            @Override
+            protected java.util.Map<String, String> getParams() {
+                java.util.Map<String, String> params = new java.util.HashMap<>();
+                params.put("user_id", String.valueOf(userId));
+                params.put("friend_id", String.valueOf(friendId));
+                return params;
+            }
+        };
+        requestQueue.add(unfriendRequest);
     }
 }

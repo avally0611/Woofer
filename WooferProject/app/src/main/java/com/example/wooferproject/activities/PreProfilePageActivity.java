@@ -76,6 +76,12 @@ public class PreProfilePageActivity extends AppCompatActivity {
         preProfileFriendsCount = findViewById(R.id.pre_profile_friends_count);
         preProfileManageButton = findViewById(R.id.pre_profile_manage_button);
         preProfilePostsRecyclerView = findViewById(R.id.pre_profile_posts_recyclerview);
+
+        preProfileFriendsCount.setOnClickListener(v -> {
+            Intent intent = new Intent(PreProfilePageActivity.this, FriendsListActivity.class);
+            intent.putExtra("user_id", userId);
+            startActivity(intent);
+        });
     }
 
     private void setupRecyclerView() {
