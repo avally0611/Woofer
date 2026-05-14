@@ -53,6 +53,17 @@ public class SearchUserAdapter extends RecyclerView.Adapter<SearchUserAdapter.Us
         holder.username.setText(currUser.getUsername());
 
         //now we check if they friend or not friend to determine which icon
+        if (currUser.isFriend())
+        {
+            //show the unfriend icon bcz already friends
+            //holder.friendButton.setImageResource(android.R.drawable.ic_menu_....
+            //holder.friendButton.setColorFilter(android.graphics.Color.RED);
+        }
+        else
+        {
+            holder.friendButton.setImageResource(R.drawable.ic_friend_add);
+            holder.friendButton.setColorFilter(android.graphics.Color.BLACK);
+        }
 
     }
 
@@ -68,29 +79,25 @@ public class SearchUserAdapter extends RecyclerView.Adapter<SearchUserAdapter.Us
     //basically just points or keeps track of the fields we wanna populate
     public static class UserViewHolder extends RecyclerView.ViewHolder
     {
-        TextView username, location, text;
-        ImageView image;
-        ImageView upvoteButton;
-        TextView upvoteCount;
+        TextView username;
+        ImageView friendButton;
 
         public UserViewHolder(@NonNull View itemView)
         {
             super(itemView);
-            username = itemView.findViewById(R.id.postUser);
-            location = itemView.findViewById(R.id.postLocation);
-            text = itemView.findViewById(R.id.postText);
-            image = itemView.findViewById(R.id.postImage);
-            upvoteButton = itemView.findViewById(R.id.upvoteButton);
-            upvoteCount = itemView.findViewById(R.id.upvoteCount);
+            friendButton = itemView.findViewById(R.id.friendButton);
 
         }
     }
-    public void updatePosts(List<Post> newPosts)
+
+    //now we need to make a helper methid so every time use types letter the screen is refreshed/updated withnew results
+    public void updateUserList(ArrayList<SearchUser> newList)
     {
-        posts.clear();
-        posts.addAll(newPosts);
+        //updates old to nrw list after we typed another letter in
+        this.users = newList;
         notifyDataSetChanged();
     }
+
 
 }
 
