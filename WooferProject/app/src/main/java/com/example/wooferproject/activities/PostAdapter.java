@@ -13,6 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.wooferproject.R;
+import com.example.wooferproject.managers.HomeScreenManager;
 import com.example.wooferproject.models.Post;
 
 import java.util.ArrayList;
@@ -121,14 +122,20 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         //now we change count and update count to database
         holder.upvoteButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
+            public void onClick(View v)
+            {
+                HomeScreenManager m = new HomeScreenManager();
 
-                //so if its already clciked, then theyre unclicking
+                //so if its already clciked, then theyre unclicking/ un vote
                 if (currPost.isUserUpvoted())
                 {
                     currPost.setUserUpvoted(false);
                     currPost.setUpvotes(currPost.getUpvotes() - 1);
+                    holder.upvoteButton.setImageResource(R.drawable.ic_heart_empty);
                     holder.upvoteButton.setColorFilter(android.graphics.Color.BLACK);
+
+                    //then also need to update db - UNCLICKING SO REMOVE
+                    m.sendUpvote(currPost.getPostid(), "remove");
                 }
 
                 //otherwise nit clciked so actually wanna upvoet
@@ -136,10 +143,14 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                 {
                     currPost.setUserUpvoted(true);
                     currPost.setUpvotes(currPost.getUpvotes() + 1);
+                    holder.upvoteButton.setImageResource(R.drawable.ic_heart_filled);
                     holder.upvoteButton.setColorFilter(android.graphics.Color.RED);
+
+                    //update db - adding an upvote
+                    m.sendUpvote(currPost.getPostid(), "add");
                 }
 
-                // Update the number on the screen instantly
+                // updating number on the screen
                 holder.upvoteCount.setText(String.valueOf(currPost.getUpvotes()));
             }
         });

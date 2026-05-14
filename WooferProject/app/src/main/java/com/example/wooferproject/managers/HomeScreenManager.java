@@ -112,15 +112,14 @@ public class HomeScreenManager {
         c.newCall(request).enqueue(new Callback()
         {
             @Override
-            public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                // If it fails (e.g., no wifi), we just print an error to the logs
-                android.util.Log.e("BondUpvote", "Failed to update DB: " + e.getMessage());
+            public void onFailure(Call call, IOException e) {
+                android.util.Log.e("BondUpvote", "Failed: " + e.getMessage());
             }
 
             @Override
-            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+            public void onResponse(Call call, Response response) throws IOException {
                 if (response.isSuccessful()) {
-                    android.util.Log.d("BondUpvote", "Database upvote updated successfully!");
+                    android.util.Log.d("BondUpvote", "Database updated successfully");
                 }
             }
         });
