@@ -24,7 +24,9 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class PreProfilePageManager {
 
@@ -242,30 +244,47 @@ public class PreProfilePageManager {
             return;
         }
 
+        String url = GET_FRIENDS_URL + "?target_user_id=" + userId;
+
         StringRequest friendsRequest = new StringRequest(
                 Request.Method.GET,
-                GET_FRIENDS_URL + "?user_id=" + userId,
+                url,
                 response -> {
                     try {
                         JSONObject jsonResponse = new JSONObject(response);
-                        if (jsonResponse.getBoolean("success")) {
-                            JSONArray jsonArray = jsonResponse.getJSONArray("friends");
-                            List<User> friends = new ArrayList<>();
-                            for (int i = 0; i < jsonArray.length(); i++) {
-                                JSONObject obj = jsonArray.getJSONObject(i);
-                                friends.add(new User(obj.getInt("id"), obj.getString("username"), ""));
-                            }
-                            callback.onSuccess(friends);
-                        } else {
+
+                        if (!jsonResponse.getBoolean("success")) {
                             callback.onFailure(jsonResponse.optString("message", "Failed to load friends"));
+                            return;
                         }
+
+                        JSONArray jsonArray = jsonResponse.getJSONArray("friends");
+
+                        List<User> friends = new ArrayList<>();
+
+                        for (int i = 0; i < jsonArray.length(); i++) {
+                            JSONObject obj = jsonArray.getJSONObject(i);
+
+                            friends.add(new User(
+                                    obj.getInt("id"),
+                                    obj.getString("username"),
+                                    ""   // email not provided by PHP
+                            ));
+                        }
+
+                        callback.onSuccess(friends);
+
                     } catch (JSONException e) {
                         Log.e(TAG, "Friends parse error", e);
                         callback.onFailure("Failed to parse friends list");
                     }
                 },
-                error -> callback.onFailure("Network error fetching friends")
+                error -> {
+                    Log.e(TAG, "Volley error", error);
+                    callback.onFailure("Network error fetching friends: " + error.getMessage());
+                }
         );
+
         requestQueue.add(friendsRequest);
     }
 
@@ -303,4 +322,26 @@ public class PreProfilePageManager {
         };
         requestQueue.add(unfriendRequest);
     }
+    public static void addFriend(int userId, int friendId, UnfriendCallback callback) {
+        StringRequest request = new StringRequest(Request.Method.POST, BASE_URL + "add_friend.php",
+                response -> {
+                    try {
+                        JSONObject json = new JSONObject(response);
+                        if (json.getBoolean("success")) callback.onSuccess(json.getString("message"));
+                        else callback.onFailure(json.getString("message"));
+                    } catch (Exception e) { callback.onFailure("Parse error"); }
+                },
+                error -> callback.onFailure("Network error")
+        ) {
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<>();
+                params.put("user_id", String.valueOf(userId));
+                params.put("friend_id", String.valueOf(friendId));
+                return params;
+            }
+        };
+        requestQueue.add(request);
+    }
+
 }

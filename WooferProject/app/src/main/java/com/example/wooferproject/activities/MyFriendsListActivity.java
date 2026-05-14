@@ -2,6 +2,7 @@ package com.example.wooferproject.activities;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -9,17 +10,16 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.wooferproject.R;
-import com.example.wooferproject.activities.FriendsAdapter;
 import com.example.wooferproject.managers.PreProfilePageManager;
 import com.example.wooferproject.models.User;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class FriendsListActivity extends AppCompatActivity implements FriendsAdapter.OnUnfriendClickListener {
+public class MyFriendsListActivity extends AppCompatActivity implements MyFriendsAdapter.OnUnfriendClickListener {
 
     private RecyclerView friendsRecyclerView;
-    private FriendsAdapter friendsAdapter;
+    private MyFriendsAdapter friendsAdapter;
     private List<User> friendsList;
     private int currentUserId;
 
@@ -43,10 +43,14 @@ public class FriendsListActivity extends AppCompatActivity implements FriendsAda
         friendsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         friendsList = new ArrayList<>();
-        friendsAdapter = new FriendsAdapter(friendsList, this);
+        friendsAdapter = new MyFriendsAdapter(friendsList, this);
         friendsRecyclerView.setAdapter(friendsAdapter);
 
         loadFriends();
+        ImageButton backButton = findViewById(R.id.backButton);
+        backButton.setOnClickListener(v -> {
+            finish(); // This closes the current activity and takes you back
+        });
     }
 
     private void loadFriends() {
@@ -58,7 +62,7 @@ public class FriendsListActivity extends AppCompatActivity implements FriendsAda
                     friendsList.addAll(friends);
                     friendsAdapter.updateFriendList(friendsList);
                     if (friends.isEmpty()) {
-                        Toast.makeText(FriendsListActivity.this, "No friends found.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MyFriendsListActivity.this, "No friends found.", Toast.LENGTH_SHORT).show();
                     }
                 });
             }
@@ -66,7 +70,7 @@ public class FriendsListActivity extends AppCompatActivity implements FriendsAda
             @Override
             public void onFailure(String error) {
                 runOnUiThread(() ->
-                        Toast.makeText(FriendsListActivity.this, "Error loading friends: " + error, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(MyFriendsListActivity.this, "Error loading friends: " + error, Toast.LENGTH_SHORT).show()
                 );
             }
         });
@@ -79,7 +83,7 @@ public class FriendsListActivity extends AppCompatActivity implements FriendsAda
             @Override
             public void onSuccess(String message) {
                 runOnUiThread(() -> {
-                    Toast.makeText(FriendsListActivity.this, message, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MyFriendsListActivity.this, message, Toast.LENGTH_SHORT).show();
                     friendsList.remove(position);
                     friendsAdapter.notifyItemRemoved(position);
                 });
@@ -88,7 +92,7 @@ public class FriendsListActivity extends AppCompatActivity implements FriendsAda
             @Override
             public void onFailure(String error) {
                 runOnUiThread(() ->
-                        Toast.makeText(FriendsListActivity.this, "Error unfriending: " + error, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(MyFriendsListActivity.this, "Error unfriending: " + error, Toast.LENGTH_SHORT).show()
                 );
             }
         });

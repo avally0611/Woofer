@@ -31,7 +31,7 @@ public class PreProfilePageActivity extends AppCompatActivity {
     private Button preProfileManageButton;
     private RecyclerView preProfilePostsRecyclerView;
 
-    private PostAdapterProfile postAdapter;
+    private PostAdapter postAdapter;
     private int userId;
 
     @Override
@@ -78,7 +78,7 @@ public class PreProfilePageActivity extends AppCompatActivity {
         preProfilePostsRecyclerView = findViewById(R.id.pre_profile_posts_recyclerview);
 
         preProfileFriendsCount.setOnClickListener(v -> {
-            Intent intent = new Intent(PreProfilePageActivity.this, FriendsListActivity.class);
+            Intent intent = new Intent(PreProfilePageActivity.this, MyFriendsListActivity.class);
             intent.putExtra("user_id", userId);
             startActivity(intent);
         });
@@ -86,7 +86,7 @@ public class PreProfilePageActivity extends AppCompatActivity {
 
     private void setupRecyclerView() {
         preProfilePostsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        postAdapter = new PostAdapterProfile(new ArrayList<>());
+        postAdapter = new PostAdapter(new ArrayList<>());
         preProfilePostsRecyclerView.setAdapter(postAdapter);
     }
 

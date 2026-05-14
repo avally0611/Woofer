@@ -1,5 +1,6 @@
 package com.example.wooferproject.activities;
 
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,7 +15,7 @@ import com.example.wooferproject.models.User;
 
 import java.util.List;
 
-public class FriendsAdapter extends RecyclerView.Adapter<FriendsAdapter.FriendViewHolder> {
+public class MyFriendsAdapter extends RecyclerView.Adapter<MyFriendsAdapter.FriendViewHolder> {
 
     private List<User> friendList;
     private OnUnfriendClickListener unfriendClickListener;
@@ -23,7 +24,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<FriendsAdapter.FriendVi
         void onUnfriendClick(int position);
     }
 
-    public FriendsAdapter(List<User> friendList, OnUnfriendClickListener listener) {
+    public MyFriendsAdapter(List<User> friendList, OnUnfriendClickListener listener) {
         this.friendList = friendList;
         this.unfriendClickListener = listener;
     }
@@ -45,6 +46,13 @@ public class FriendsAdapter extends RecyclerView.Adapter<FriendsAdapter.FriendVi
                 unfriendClickListener.onUnfriendClick(position);
             }
         });
+        // Inside onBindViewHolder in FriendsAdapter.java
+        holder.friendUsername.setOnClickListener(v -> {
+            Intent intent = new Intent(v.getContext(), UserProfileActivity.class);
+            intent.putExtra("target_user_id", friend.id); // The person whose profile you want to see
+            v.getContext().startActivity(intent);
+        });
+
     }
 
     @Override

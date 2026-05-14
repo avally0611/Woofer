@@ -20,6 +20,8 @@ import com.example.wooferproject.managers.PostPageManager;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import android.media.ExifInterface;
+import android.graphics.Matrix;
 
 public class PostPageActivity extends AppCompatActivity {
     private int userId;
@@ -156,7 +158,45 @@ public class PostPageActivity extends AppCompatActivity {
                     uri
             );
 
-            Bitmap resized = Bitmap.createScaledBitmap(bitmap, 500, 500, true);
+            // Calculate new dimensions to maintain aspect ratio while fitting within a max size
+            int originalWidth = bitmap.getWidth();
+            int originalHeight = bitmap.getHeight();
+            int maxSize = 1024; // Max size for either width or height
+
+            int newWidth = originalWidth;
+            int newHeight = originalHeight;
+
+            if (originalWidth > maxSize || originalHeight > maxSize) {
+                if (originalWidth > originalHeight) {
+                    newWidth = maxSize;
+                    newHeight = (int) (originalHeight * ((float) maxSize / originalWidth));
+                } else {
+                    newHeight = maxSize;
+                    newWidth = (int) (originalWidth * ((float) maxSize / originalHeight));
+                }
+            }
+            Bitmap resized = Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true);
+
+            // Handle image rotation based on EXIF data
+            try {
+                ExifInterface exifInterface = new ExifInterface(this.getContentResolver().openInputStream(uri));
+                int orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+                Matrix matrix = new Matrix();
+                switch (orientation) {
+                    case ExifInterface.ORIENTATION_ROTATE_90:
+                        matrix.postRotate(90);
+                        break;
+                    case ExifInterface.ORIENTATION_ROTATE_180:
+                        matrix.postRotate(180);
+                        break;
+                    case ExifInterface.ORIENTATION_ROTATE_270:
+                        matrix.postRotate(270);
+                        break;
+                }
+                resized = Bitmap.createBitmap(resized, 0, 0, resized.getWidth(), resized.getHeight(), matrix, true);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
 

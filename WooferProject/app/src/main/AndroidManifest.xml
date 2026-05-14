@@ -33,6 +33,8 @@
         <activity android:name=".activities.SearchActivity" />
         <activity android:name=".activities.PostPageActivity" />
         <activity android:name=".activities.PreProfilePageActivity" />
+        <activity android:name=".activities.MyFriendsListActivity" />
+        <activity android:name=".activities.UserProfileActivity" />
     </application>
 
 </manifest>
