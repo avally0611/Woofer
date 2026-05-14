@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 //so recycler view has a built in adapter but we have to make our own specific to the project so we make our own object that extends the recycler object's mrthods
-public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder>
+public class PostAdapter extends RecyclerView.Adapter<SearchUserAdapter.UserViewHolder>
 {
     private ArrayList<Post> posts;
 

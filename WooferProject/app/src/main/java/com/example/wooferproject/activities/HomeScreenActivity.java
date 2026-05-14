@@ -7,7 +7,6 @@
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -26,7 +25,7 @@ public class HomeScreenActivity extends AppCompatActivity
 {
     //just declasre varibales we gonna use
     private RecyclerView recyclerView;
-    private PostAdapter adapter;
+    private SearchUserAdapter adapter;
     private ArrayList<Post> posts = new ArrayList<Post>();
     private HomeScreenManager homeScreenManager;
     private int userId;
@@ -47,7 +46,7 @@ public class HomeScreenActivity extends AppCompatActivity
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         //connect postadapter file to our empty recycler view so that the adapter can add the posts info to our recycler view
-        adapter = new PostAdapter(posts);
+        adapter = new SearchUserAdapter(posts);
         recyclerView.setAdapter(adapter);
 
 
