@@ -1,4 +1,4 @@
-          package com.example.wooferproject.activities;
+package com.example.wooferproject.activities;
 
 //so acitivty files just deal with frontend - basically communicate with screen and user input and stuff
 //okay so after some research i have decided ot use a recycler view - basically it like shows a limited amount of posts from the many we get from db and as you scroll down it populates with newwer posts
@@ -25,7 +25,7 @@ public class HomeScreenActivity extends AppCompatActivity
 {
     //just declasre varibales we gonna use
     private RecyclerView recyclerView;
-    private SearchUserAdapter adapter;
+    private PostAdapter adapter;
     private ArrayList<Post> posts = new ArrayList<Post>();
     private HomeScreenManager homeScreenManager;
     private int userId;
@@ -46,7 +46,7 @@ public class HomeScreenActivity extends AppCompatActivity
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         //connect postadapter file to our empty recycler view so that the adapter can add the posts info to our recycler view
-        adapter = new SearchUserAdapter(posts);
+        adapter = new PostAdapter(posts);
         recyclerView.setAdapter(adapter);
 
 

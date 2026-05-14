@@ -2,17 +2,33 @@ package com.example.wooferproject.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.widget.EditText;
+
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.example.wooferproject.R;
+import com.example.wooferproject.models.SearchUser;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+
+import java.util.ArrayList;
 
 public class SearchActivity extends AppCompatActivity {
     private int userId;
+    private EditText searchBar;
+    private RecyclerView mutualsRecyclerView;
+    private RecyclerView searchResultsRecyclerView;
+
+    private SearchUserAdapter searchAdapter;
+    private ArrayList<SearchUser> searchList;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         userId = getIntent().getIntExtra("user_id", -1);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.search);
+
+
+
 
         // this allows the bottom navigation menu to be used
         BottomNavigationView bottomNav = findViewById(R.id.navigationBar);
