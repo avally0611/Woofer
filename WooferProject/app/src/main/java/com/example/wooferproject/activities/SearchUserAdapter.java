@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.wooferproject.R;
 import com.example.wooferproject.managers.HomeScreenManager;
+import com.example.wooferproject.managers.SearchManager;
 import com.example.wooferproject.models.Post;
 import com.example.wooferproject.models.SearchUser;
 
@@ -23,6 +24,8 @@ import java.util.List;
 public class SearchUserAdapter extends RecyclerView.Adapter<SearchUserAdapter.UserViewHolder>
 {
     private ArrayList<SearchUser> users;
+    private SearchManager manager = new SearchManager();
+    private int myUserID;
 
         //this allows search actity to send the list users to the adapter so it can start
     public SearchUserAdapter(ArrayList<SearchUser> users)
@@ -65,6 +68,27 @@ public class SearchUserAdapter extends RecyclerView.Adapter<SearchUserAdapter.Us
             holder.friendButton.setColorFilter(android.graphics.Color.BLACK);
         }
 
+        holder.friendButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (currUser.isFriend())
+                {
+                    currUser.setFriend(false);
+                    holder.friendButton.setImageResource(R.drawable.ic_friend_add);
+                    holder.friendButton.setColorFilter(android.graphics.Color.BLACK);
+                    manager.addOrRemoveFriend(myUserID, currUser.getUserID(), "remove");
+                }
+                else
+                {
+                    currUser.setFriend(true);
+                    holder.friendButton.setImageResource(R.drawable.ic_friend_remove);
+                    holder.friendButton.setColorFilter(android.graphics.Color.RED);
+                    manager.addOrRemoveFriend(myUserID, currUser.getUserID(), "add");
+                }
+
+            }
+        });
+
     }
 
     //need this to tell recycler view how many cards exist in view
@@ -85,6 +109,7 @@ public class SearchUserAdapter extends RecyclerView.Adapter<SearchUserAdapter.Us
         public UserViewHolder(@NonNull View itemView)
         {
             super(itemView);
+            username = itemView.findViewById(R.id.username);
             friendButton = itemView.findViewById(R.id.friendButton);
 
         }

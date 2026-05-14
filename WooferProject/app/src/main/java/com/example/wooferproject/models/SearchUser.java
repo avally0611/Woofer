@@ -2,9 +2,9 @@ package com.example.wooferproject.models;
 
 //this is a model that helps with shwoing if a searched user is a friend or not
 public class SearchUser {
-    public int userID;
-    public String username;
-    public boolean isFriend;
+    private int userID;
+    private String username;
+    private boolean isFriend;
 
     public SearchUser(int userID, String username, boolean isFriend)
     {
