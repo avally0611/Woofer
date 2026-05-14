@@ -56,8 +56,8 @@ public class SearchUserAdapter extends RecyclerView.Adapter<SearchUserAdapter.Us
         if (currUser.isFriend())
         {
             //show the unfriend icon bcz already friends
-            //holder.friendButton.setImageResource(android.R.drawable.ic_menu_....
-            //holder.friendButton.setColorFilter(android.graphics.Color.RED);
+            holder.friendButton.setImageResource(R.drawable.ic_friend_remove);
+            holder.friendButton.setColorFilter(android.graphics.Color.RED);
         }
         else
         {
