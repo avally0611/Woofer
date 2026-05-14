@@ -47,13 +47,45 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
     public void onBindViewHolder(@NonNull PostViewHolder holder, int pos)
     {
         Post currPost = posts.get(pos);
-        holder.username.setText(currPost.getUsername());
-        holder.location.setText(currPost.getLocation());
-        holder.text.setText(currPost.getText());
 
+        String username = currPost.getUsername();
+        //we have to first check if username empty so it doesnt show on screen
+        if (username == null || username.equalsIgnoreCase("null") || username.trim().isEmpty())
+        {
+            holder.username.setVisibility(View.GONE);
+        }
+        else
+        {
+            holder.username.setVisibility(View.VISIBLE);
+            holder.username.setText(username);
+        }
+
+        String text = currPost.getText();
+        if (text == null || text.equalsIgnoreCase("null") || text.trim().isEmpty())
+        {
+            holder.text.setVisibility(View.GONE);
+        }
+        else
+        {
+            holder.text.setVisibility(View.VISIBLE);
+            holder.text.setText(text.trim());
+        }
+
+        String location = currPost.getLocation();
+        if (location == null || location.equalsIgnoreCase("null") || location.trim().isEmpty())
+        {
+            holder.location.setVisibility(View.GONE);
+        }
+        else
+        {
+            holder.location.setVisibility(View.VISIBLE);
+            holder.location.setText(location);
+        }
+
+        //now gotta decode image from db
         String imgString = currPost.getImage();
 
-        if (imgString != null && !imgString.isEmpty())
+        if (imgString != null && !imgString.equalsIgnoreCase("null") && !imgString.trim().isEmpty())
         {
             //so the image was sent in base 64 string format so dstabae could hold image nicely - decode back to byte array
             byte[] decodedString = Base64.decode(imgString, Base64.DEFAULT);
@@ -70,6 +102,47 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             //if now image, rememebr image view doesnt get populated and we hdie it so it doesn tlook weird
             holder.image.setVisibility(View.GONE);
         }
+
+
+        //now we do the upvaote logic ----
+        holder.upvoteCount.setText(String.valueOf(currPost.getUpvotes()));
+
+
+        //here is where we change colour if user clicked button or unvoted
+        if (currPost.isUserUpvoted())
+        {
+            holder.upvoteButton.setColorFilter(android.graphics.Color.RED);
+        }
+        else
+        {
+            holder.upvoteButton.setColorFilter(android.graphics.Color.BLACK);
+        }
+
+        //now we change count and update count to database
+        holder.upvoteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                //so if its already clciked, then theyre unclicking
+                if (currPost.isUserUpvoted())
+                {
+                    currPost.setUserUpvoted(false);
+                    currPost.setUpvotes(currPost.getUpvotes() - 1);
+                    holder.upvoteButton.setColorFilter(android.graphics.Color.BLACK);
+                }
+
+                //otherwise nit clciked so actually wanna upvoet
+                else
+                {
+                    currPost.setUserUpvoted(true);
+                    currPost.setUpvotes(currPost.getUpvotes() + 1);
+                    holder.upvoteButton.setColorFilter(android.graphics.Color.RED);
+                }
+
+                // Update the number on the screen instantly
+                holder.upvoteCount.setText(String.valueOf(currPost.getUpvotes()));
+            }
+        });
     }
 
     //need this to tell recycler view how many cards exist in view
@@ -86,6 +159,8 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
     {
         TextView username, location, text;
         ImageView image;
+        ImageView upvoteButton;
+        TextView upvoteCount;
 
         public PostViewHolder(@NonNull View itemView)
         {
@@ -94,6 +169,8 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             location = itemView.findViewById(R.id.postLocation);
             text = itemView.findViewById(R.id.postText);
             image = itemView.findViewById(R.id.postImage);
+            upvoteButton = itemView.findViewById(R.id.upvoteButton);
+            upvoteCount = itemView.findViewById(R.id.upvoteCount);
 
         }
     }

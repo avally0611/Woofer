@@ -174,7 +174,9 @@ public class PreProfilePageManager {
                                     obj.getString("username"),
                                     obj.getString("text"),
                                     obj.optString("location", ""),
-                                    obj.optString("image", "")
+                                    obj.optString("image", ""),
+                                    obj.getInt("post_id"),
+                                    obj.optInt("upvotes", 0)
                             ));
                         }
                         callback.onSuccess(posts);

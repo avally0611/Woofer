@@ -38,6 +38,7 @@
             android:layout_width="match_parent"
             android:layout_height="200dp"
             android:layout_marginTop="8dp"
+            android:layout_marginBottom="12dp"
             android:scaleType="centerCrop"
             android:visibility="gone" />
 
@@ -45,12 +46,26 @@
             android:id="@+id/postText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
             android:text="text for post from db"
             android:textColor="#333333"
-            android:textSize="14sp" />
+            android:textSize="20sp" />
 
-        <!-- Wdont forget uopvote button + image-->
+        <ImageView
+            android:id="@+id/upvoteButton"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_heart_empty"
+            app:tint="#000000" />
+
+            <TextView
+            android:id="@+id/upvoteCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="0"
+            android:textColor="#333333"
+            android:textSize="14sp"
+            android:textStyle="bold" />
 
     </LinearLayout>
 

@@ -78,7 +78,7 @@ public class HomeScreenManager {
                     {
                         JSONObject jsonPost = jsonArr.getJSONObject(i);
 
-                        posts.add(new Post(jsonPost.getString("username"), jsonPost.optString("text", ""), jsonPost.optString("location", ""), jsonPost.optString("image", "")));
+                        posts.add(new Post(jsonPost.getString("username"), jsonPost.optString("text", ""), jsonPost.optString("location", ""), jsonPost.optString("image", ""),jsonPost.getInt("post_id"), jsonPost.optInt("upvotes",0)));
                     }
 
                     //okay so we got our posts objects - so can signal actviity class and send arraylist for UI update
@@ -92,5 +92,37 @@ public class HomeScreenManager {
             }
         });
 
+    }
+
+    //okay now we need a separate function to handle the upvotes
+    // This fires silently in the background whenever a user taps the heart
+    public void sendUpvote(int postId, String action) {
+
+        RequestBody formBody = new FormBody.Builder()
+                .add("post_id", String.valueOf(postId))
+                .add("action", action) //wheter to icnrease or decrease upvote
+                .build();
+
+        Request request = new Request.Builder()
+                .url("https://wmc.ms.wits.ac.za/students/sgroup2668/update_upvote.php")
+                .post(formBody)
+                .build();
+
+        //enqueue tells okhttp to run this in backrgound - so app doesnt freeze
+        c.newCall(request).enqueue(new Callback()
+        {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                // If it fails (e.g., no wifi), we just print an error to the logs
+                android.util.Log.e("BondUpvote", "Failed to update DB: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    android.util.Log.d("BondUpvote", "Database upvote updated successfully!");
+                }
+            }
+        });
     }
 }
