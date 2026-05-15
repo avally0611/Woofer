@@ -27,7 +27,7 @@ public class UserProfileActivity extends AppCompatActivity {
     private TextView profileUsername, postsCount, friendsCount;
 
     private RecyclerView postsRecyclerView;
-    private PostAdapter postAdapter;
+    private StaticPostAdapter postAdapter;
     private RecyclerView userRecyclerView;
     private UserAdapter userAdapter;
 
@@ -82,7 +82,7 @@ public class UserProfileActivity extends AppCompatActivity {
 
     private void setupRecyclerView() {
         postsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        postAdapter = new PostAdapter(new ArrayList<>());
+        postAdapter = new StaticPostAdapter(new ArrayList<>());
         postsRecyclerView.setAdapter(postAdapter);
     }
 
