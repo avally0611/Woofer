@@ -1,94 +1,94 @@
 package com.example.wooferproject.managers;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.io.IOException;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
+import android.os.Handler;
+import android.os.Looper;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class PostPageManager {
 
+    private static final OkHttpClient c = new OkHttpClient();
+    // allows for internet connection
+    private static final String BASE_URL = "https://wmc.ms.wits.ac.za/students/sgroup2668/";
+
+    public interface PostCallback {
+        void onSuccess(String message);
+        void onFailure(String error);
+    }
+
+    // creates a post witht he text and image requirements
     public static void createPost(int userId,
                                   String text,
                                   String location,
-                                  byte[] imageBytes) {
+                                  byte[] imageBytes,
+                                  PostCallback callback) {
 
-        new Thread(() -> {
-            try {
-                String boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW";
+        if ((text == null || text.trim().isEmpty()) &&
+                (location == null || location.trim().isEmpty()) &&
+                (imageBytes == null || imageBytes.length == 0)) {
+            callback.onFailure("At least one field (text, location, or image) must be filled.");
+            return;
+        }
 
-                URL url = new URL(
-                        "https://wmc.ms.wits.ac.za/students/sgroup2668/create_post.php"
-                );
-                HttpURLConnection conn =
-                        (HttpURLConnection) url.openConnection();
+        MultipartBody.Builder multipartBodyBuilder = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("user_id", String.valueOf(userId));
 
-                conn.setRequestMethod("POST");
-                conn.setDoOutput(true);
+        if (text != null && !text.trim().isEmpty()) {
+            multipartBodyBuilder.addFormDataPart("text", text);
+        }
+        if (location != null && !location.trim().isEmpty()) {
+            multipartBodyBuilder.addFormDataPart("location", location);
+        }
+        if (imageBytes != null && imageBytes.length > 0) {
+            multipartBodyBuilder.addFormDataPart("image", "post.jpg",
+                    RequestBody.create(MediaType.parse("image/jpeg"), imageBytes));
+        }
 
-                conn.setRequestProperty(
-                        "Content-Type",
-                        "multipart/form-data; boundary=" + boundary
-                );
+        RequestBody requestBody = multipartBodyBuilder.build();
 
-                DataOutputStream dos =
-                        new DataOutputStream(conn.getOutputStream());
+        Request request = new Request.Builder()
+                .url(BASE_URL + "create_post.php")
+                .post(requestBody)
+                .build();
 
-                // user_id
-                dos.writeBytes("--" + boundary + "\r\n");
-                dos.writeBytes(
-                        "Content-Disposition: form-data; name=\"user_id\"\r\n\r\n"
-                );
-                dos.writeBytes(userId + "\r\n");
-
-                // text
-                dos.writeBytes("--" + boundary + "\r\n");
-                dos.writeBytes(
-                        "Content-Disposition: form-data; name=\"text\"\r\n\r\n"
-                );
-                dos.writeBytes(text + "\r\n");
-
-                // location
-                dos.writeBytes("--" + boundary + "\r\n");
-                dos.writeBytes(
-                        "Content-Disposition: form-data; name=\"location\"\r\n\r\n"
-                );
-                dos.writeBytes(location + "\r\n");
-
-                // image
-                if (imageBytes != null) {
-                    dos.writeBytes("--" + boundary + "\r\n");
-                    dos.writeBytes(
-                            "Content-Disposition: form-data; " +
-                                    "name=\"image\"; filename=\"post.jpg\"\r\n"
-                    );
-
-                    dos.writeBytes(
-                            "Content-Type: image/jpeg\r\n\r\n"
-                    );
-                    dos.write(imageBytes);
-                    dos.writeBytes("\r\n");
-                }
-                dos.writeBytes("--" + boundary + "--\r\n");
-                dos.flush();
-                dos.close();
-
-                int responseCode = conn.getResponseCode();
-                BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(conn.getInputStream())
-                );
-
-                String line;
-                StringBuilder response = new StringBuilder();
-                while ((line = reader.readLine()) != null) {response.append(line);
-                }
-
-                System.out.println("SERVER RESPONSE: " + response.toString());
-
-            } catch (Exception e) {
-                e.printStackTrace();
+        c.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                new Handler(Looper.getMainLooper()).post(() -> callback.onFailure("Network error: " + e.getMessage()));
             }
-        }).start();
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    try {
+                        String responseData = response.body().string();
+                        JSONObject jsonResponse = new JSONObject(responseData);
+                        new Handler(Looper.getMainLooper()).post(() -> {
+                            if (jsonResponse.optBoolean("success", false)) {
+                                callback.onSuccess(jsonResponse.optString("message", "Post created successfully!"));
+                            } else {
+                                callback.onFailure(jsonResponse.optString("message", "Failed to create post."));
+                            }
+                        });
+                    } catch (JSONException e) {
+                        new Handler(Looper.getMainLooper()).post(() -> callback.onFailure("Parse error: " + e.getMessage()));
+                    }
+                } else {
+                    new Handler(Looper.getMainLooper()).post(() -> callback.onFailure("Server error: " + response.code()));
+                }
+            }
+        });
     }
 }

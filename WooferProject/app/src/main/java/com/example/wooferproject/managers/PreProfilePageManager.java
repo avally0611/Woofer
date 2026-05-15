@@ -8,10 +8,7 @@ import android.os.Looper;
 import android.util.Base64;
 import android.util.Log;
 
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
+
 import com.example.wooferproject.models.Post;
 import com.example.wooferproject.models.User;
 
@@ -19,19 +16,25 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
 public class PreProfilePageManager {
+    private static final OkHttpClient c = new OkHttpClient();
+    // thi is used to connect to the internet/ Volley can also be used instead
 
     private static final String TAG = "PreProfilePageManager";
-    private static RequestQueue requestQueue;
 
     private static final String BASE_URL = "https://wmc.ms.wits.ac.za/students/sgroup2668/";
     private static final String GET_PROFILE_DETAILS_URL = BASE_URL + "get_profile.php";
@@ -40,140 +43,172 @@ public class PreProfilePageManager {
     private static final String GET_POSTS_URL = BASE_URL + "get_post_pic.php";
     private static final String GET_FRIENDS_URL = BASE_URL + "get_friends.php";
     private static final String UNFRIEND_URL = BASE_URL + "unfriend.php";
+    // this provides an easier way to access all the php files
 
+    // gets the text details of the profile
     public interface ProfileDetailsCallback {
         void onSuccess(User user, int postCount, int friendCount);
         void onFailure(String error);
     }
 
+    // gets the image details of the profile
     public interface ImageCallback {
         void onSuccess(byte[] imageBytes);
         void onFailure(String error);
     }
 
+    // gets the profile image
     public interface ProfileImageCallback {
         void onSuccess(Bitmap imageBitmap);
         void onFailure(String error);
     }
 
+    // gets the posts
     public interface PostsCallback {
         void onSuccess(List<Post> posts);
         void onFailure(String error);
     }
 
+    // gets the friends
     public interface FriendsCallback {
         void onSuccess(List<User> friends);
         void onFailure(String error);
     }
 
+    // unfriends
     public interface UnfriendCallback {
         void onSuccess(String message);
         void onFailure(String error);
     }
 
     public static synchronized void init(Context context) {
-        if (requestQueue == null) {
-            requestQueue = Volley.newRequestQueue(context.getApplicationContext());
-        }
+        // OkHttpClient is initialized and reused
     }
 
-    public static void getProfileData(int userId, ProfileDetailsCallback callback) {
-        if (requestQueue == null) {
-            callback.onFailure("RequestQueue not initialized.");
-            return;
-        }
+    public static void getProfileData(int userId, int viewerId, ProfileDetailsCallback callback) {
+        String url = GET_PROFILE_DETAILS_URL + "?id=" + userId + "&viewer_id=" + viewerId;
+        Request request = new Request.Builder().url(url).build();
 
-        StringRequest profileDetailsRequest = new StringRequest(
-                Request.Method.GET,
-                GET_PROFILE_DETAILS_URL + "?id=" + userId,
-                response -> {
+        c.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                callback.onFailure("Network error fetching details: " + e.getMessage());
+                // safety message if error occurs
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
                     try {
-                        JSONObject jsonResponse = new JSONObject(response);
+                        String responseData = response.body().string();
+                        JSONObject jsonResponse = new JSONObject(responseData);
                         if (jsonResponse.getBoolean("success")) {
                             String username = jsonResponse.getString("username");
                             String name = jsonResponse.getString("name");
                             String email = jsonResponse.getString("email");
                             User user = new User(name, username, email);
+                            user.id = userId; // ensure ID is set
+                            user.isFriend = jsonResponse.optBoolean("is_friend", false);
 
-                            // Fetch counts
                             fetchCounts(userId, user, callback);
                         } else {
                             callback.onFailure(jsonResponse.optString("message", "Unknown error"));
                         }
                     } catch (JSONException e) {
-                        Log.e(TAG, "Profile parse error", e);
                         callback.onFailure("Failed to parse profile details");
                     }
-                },
-                error -> callback.onFailure("Network error fetching details")
-        );
-        requestQueue.add(profileDetailsRequest);
+                } else {
+                    callback.onFailure("Server error: " + response.code());
+                }
+            }
+        });
     }
 
+    // gets the counts of the posts and the friends
+    // tells you how many posts posted and how many friends of the user
     private static void fetchCounts(int userId, User user, ProfileDetailsCallback callback) {
-        StringRequest countsRequest = new StringRequest(
-                Request.Method.GET,
-                GET_COUNTS_URL + "?id=" + userId,
-                countsResponse -> {
+        Request request = new Request.Builder()
+                .url(GET_COUNTS_URL + "?id=" + userId)
+                .build();
+
+        c.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                callback.onFailure("Network error fetching counts: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
                     try {
-                        JSONObject countsJson = new JSONObject(countsResponse);
+                        String responseData = response.body().string();
+                        JSONObject countsJson = new JSONObject(responseData);
                         if (countsJson.getBoolean("success")) {
                             int postCount = countsJson.getInt("post_count");
                             int friendCount = countsJson.getInt("friend_count");
-                            callback.onSuccess(user, postCount, friendCount);
+                            new Handler(Looper.getMainLooper()).post(() -> callback.onSuccess(user, postCount, friendCount));
                         } else {
                             callback.onFailure(countsJson.optString("message", "Error fetching counts"));
                         }
                     } catch (JSONException e) {
                         callback.onFailure("Failed to parse counts");
                     }
-                },
-                error -> callback.onFailure("Network error fetching counts")
-        );
-        requestQueue.add(countsRequest);
+                } else {
+                    callback.onFailure("Server error: " + response.code());
+                }
+            }
+        });
     }
 
     public static void getProfileImage(int userId, ProfileImageCallback callback) {
-        if (requestQueue == null) {
-            callback.onFailure("RequestQueue not initialized.");
-            return;
-        }
+        Request request = new Request.Builder()
+                .url(GET_PROFILE_IMAGE_URL + "?id=" + userId)
+                .build();
 
-        StringRequest stringRequest = new StringRequest(
-                Request.Method.GET,
-                GET_PROFILE_IMAGE_URL + "?id=" + userId,
-                response -> {
-                    if (response == null || response.trim().isEmpty() || response.equals("null")) {
-                        callback.onSuccess(null);
-                        return;
-                    }
+        c.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                callback.onFailure("Network error fetching image: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
                     try {
-                        byte[] decodedString = Base64.decode(response.trim(), Base64.DEFAULT);
+                        String responseData = response.body().string();
+                        if (responseData == null || responseData.trim().isEmpty() || responseData.equals("null")) {
+                            new Handler(Looper.getMainLooper()).post(() -> callback.onSuccess(null));
+                            return;
+                        }
+                        byte[] decodedString = Base64.decode(responseData.trim(), Base64.DEFAULT);
                         Bitmap bitmap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-                        callback.onSuccess(bitmap);
+                        new Handler(Looper.getMainLooper()).post(() -> callback.onSuccess(bitmap));
                     } catch (Exception e) {
-                        Log.e(TAG, "Image decode error", e);
                         callback.onFailure("Failed to decode image");
                     }
-                },
-                error -> callback.onFailure("Network error fetching image")
-        );
-        requestQueue.add(stringRequest);
+                } else {
+                    callback.onFailure("Server error: " + response.code());
+                }
+            }
+        });
     }
 
     public static void getPosts(int userId, PostsCallback callback) {
-        if (requestQueue == null) {
-            callback.onFailure("RequestQueue not initialized.");
-            return;
-        }
-
         String url = GET_POSTS_URL + "?id=" + userId;
-        StringRequest stringRequest = new StringRequest(
-                Request.Method.GET,
-                url,
-                response -> {
+        Request request = new Request.Builder().url(url).build();
+
+        c.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                callback.onFailure("Network error: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
                     try {
-                        JSONObject jsonResponse = new JSONObject(response);
+                        String responseData = response.body().string();
+                        JSONObject jsonResponse = new JSONObject(responseData);
                         if (!jsonResponse.getBoolean("success")) {
                             callback.onFailure(jsonResponse.optString("message", "Failed to load posts"));
                             return;
@@ -192,156 +227,169 @@ public class PreProfilePageManager {
                                     obj.optInt("upvotes", 0)
                             ));
                         }
-                        callback.onSuccess(posts);
+                        new Handler(Looper.getMainLooper()).post(() -> callback.onSuccess(posts));
                     } catch (Exception e) {
-                        Log.e(TAG, "Posts parse error", e);
                         callback.onFailure("Parse error: " + e.getMessage());
                     }
-                },
-                error -> callback.onFailure("Network error: " + error.getMessage())
-        );
-        requestQueue.add(stringRequest);
+                } else {
+                    callback.onFailure("Server error: " + response.code());
+                }
+            }
+        });
     }
 
     public static void getPostImage(int postId, ImageCallback callback) {
-        new Thread(() -> {
-            try {
-                URL url = new URL(BASE_URL + "getpost.pic.php?id=" + postId);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
+        Request request = new Request.Builder()
+                .url(BASE_URL + "getpost.pic.php?id=" + postId)
+                .build();
 
-                BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                StringBuilder result = new StringBuilder();
-                String line;
-                while ((line = br.readLine()) != null) {
-                    result.append(line);
-                }
-                br.close();
-
-                String base64 = result.toString().trim();
-                Handler mainHandler = new Handler(Looper.getMainLooper());
-
-                if (base64.isEmpty() || base64.equals("null")) {
-                    mainHandler.post(() -> callback.onFailure("No image found"));
-                    return;
-                }
-
-                byte[] decoded = Base64.decode(base64, Base64.DEFAULT);
-                if (decoded.length == 0) {
-                    mainHandler.post(() -> callback.onFailure("Decode failed"));
-                } else {
-                    mainHandler.post(() -> callback.onSuccess(decoded));
-                }
-            } catch (Exception e) {
+        c.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
                 new Handler(Looper.getMainLooper()).post(() -> callback.onFailure("Error: " + e.getMessage()));
             }
-        }).start();
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    try {
+                        String base64 = response.body().string().trim();
+                        Handler mainHandler = new Handler(Looper.getMainLooper());
+                        if (base64.isEmpty() || base64.equals("null")) {
+                            mainHandler.post(() -> callback.onFailure("No image found"));
+                            return;
+                        }
+                        byte[] decoded = Base64.decode(base64, Base64.DEFAULT);
+                        if (decoded.length == 0) {
+                            mainHandler.post(() -> callback.onFailure("Decode failed"));
+                        } else {
+                            mainHandler.post(() -> callback.onSuccess(decoded));
+                        }
+                    } catch (Exception e) {
+                        new Handler(Looper.getMainLooper()).post(() -> callback.onFailure("Error: " + e.getMessage()));
+                    }
+                } else {
+                    new Handler(Looper.getMainLooper()).post(() -> callback.onFailure("Server error: " + response.code()));
+                }
+            }
+        });
     }
 
     public static void getFriends(int userId, FriendsCallback callback) {
-        if (requestQueue == null) {
-            callback.onFailure("RequestQueue not initialized.");
-            return;
-        }
+        String url = GET_FRIENDS_URL + "?user_id=" + userId;
+        Request request = new Request.Builder().url(url).build();
 
-        String url = GET_FRIENDS_URL + "?target_user_id=" + userId;
+        c.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                callback.onFailure("Network error fetching friends: " + e.getMessage());
+            }
 
-        StringRequest friendsRequest = new StringRequest(
-                Request.Method.GET,
-                url,
-                response -> {
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
                     try {
-                        JSONObject jsonResponse = new JSONObject(response);
-
+                        String responseData = response.body().string();
+                        JSONObject jsonResponse = new JSONObject(responseData);
                         if (!jsonResponse.getBoolean("success")) {
                             callback.onFailure(jsonResponse.optString("message", "Failed to load friends"));
                             return;
                         }
-
                         JSONArray jsonArray = jsonResponse.getJSONArray("friends");
-
                         List<User> friends = new ArrayList<>();
-
                         for (int i = 0; i < jsonArray.length(); i++) {
                             JSONObject obj = jsonArray.getJSONObject(i);
-
                             friends.add(new User(
                                     obj.getInt("id"),
                                     obj.getString("username"),
-                                    ""   // email not provided by PHP
+                                    ""
                             ));
                         }
-
-                        callback.onSuccess(friends);
-
+                        new Handler(Looper.getMainLooper()).post(() -> callback.onSuccess(friends));
                     } catch (JSONException e) {
-                        Log.e(TAG, "Friends parse error", e);
                         callback.onFailure("Failed to parse friends list");
                     }
-                },
-                error -> {
-                    Log.e(TAG, "Volley error", error);
-                    callback.onFailure("Network error fetching friends: " + error.getMessage());
+                } else {
+                    callback.onFailure("Server error: " + response.code());
                 }
-        );
-
-        requestQueue.add(friendsRequest);
+            }
+        });
     }
 
     public static void unfriend(int userId, int friendId, UnfriendCallback callback) {
-        if (requestQueue == null) {
-            callback.onFailure("RequestQueue not initialized.");
-            return;
-        }
+        RequestBody formBody = new FormBody.Builder()
+                .add("user_id", String.valueOf(userId))
+                .add("friend_id", String.valueOf(friendId))
+                .build();
 
-        StringRequest unfriendRequest = new StringRequest(
-                Request.Method.POST,
-                UNFRIEND_URL,
-                response -> {
+        Request request = new Request.Builder()
+                .url(UNFRIEND_URL)
+                .post(formBody)
+                .build();
+
+        c.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                callback.onFailure("Network error unfriending: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
                     try {
-                        JSONObject jsonResponse = new JSONObject(response);
+                        String responseData = response.body().string();
+                        JSONObject jsonResponse = new JSONObject(responseData);
                         if (jsonResponse.getBoolean("success")) {
-                            callback.onSuccess(jsonResponse.getString("message"));
+                            new Handler(Looper.getMainLooper()).post(() -> callback.onSuccess(jsonResponse.optString("message", "Unfriended")));
                         } else {
                             callback.onFailure(jsonResponse.optString("message", "Failed to unfriend"));
                         }
                     } catch (JSONException e) {
-                        Log.e(TAG, "Unfriend parse error", e);
                         callback.onFailure("Failed to parse unfriend response");
                     }
-                },
-                error -> callback.onFailure("Network error unfriending: " + error.getMessage())
-        ) {
-            @Override
-            protected java.util.Map<String, String> getParams() {
-                java.util.Map<String, String> params = new java.util.HashMap<>();
-                params.put("user_id", String.valueOf(userId));
-                params.put("friend_id", String.valueOf(friendId));
-                return params;
+                } else {
+                    callback.onFailure("Server error: " + response.code());
+                }
             }
-        };
-        requestQueue.add(unfriendRequest);
+        });
     }
     public static void addFriend(int userId, int friendId, UnfriendCallback callback) {
-        StringRequest request = new StringRequest(Request.Method.POST, BASE_URL + "add_friend.php",
-                response -> {
-                    try {
-                        JSONObject json = new JSONObject(response);
-                        if (json.getBoolean("success")) callback.onSuccess(json.getString("message"));
-                        else callback.onFailure(json.getString("message"));
-                    } catch (Exception e) { callback.onFailure("Parse error"); }
-                },
-                error -> callback.onFailure("Network error")
-        ) {
+        RequestBody formBody = new FormBody.Builder()
+                .add("user_id", String.valueOf(userId))
+                .add("friend_id", String.valueOf(friendId))
+                .build();
+
+        Request request = new Request.Builder()
+                .url(BASE_URL + "add_friend.php")
+                .post(formBody)
+                .build();
+
+        c.newCall(request).enqueue(new Callback() {
             @Override
-            protected Map<String, String> getParams() {
-                Map<String, String> params = new HashMap<>();
-                params.put("user_id", String.valueOf(userId));
-                params.put("friend_id", String.valueOf(friendId));
-                return params;
+            public void onFailure(Call call, IOException e) {
+                callback.onFailure("Network error: " + e.getMessage());
             }
-        };
-        requestQueue.add(request);
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    try {
+                        String responseData = response.body().string();
+                        JSONObject json = new JSONObject(responseData);
+                        if (json.getBoolean("success")) {
+                            new Handler(Looper.getMainLooper()).post(() -> callback.onSuccess(json.optString("message", "Friend added")));
+                        } else {
+                            callback.onFailure(json.optString("message", "Failed to add friend"));
+                        }
+                    } catch (JSONException e) {
+                        callback.onFailure("Parse error");
+                    }
+                } else {
+                    callback.onFailure("Server error: " + response.code());
+                }
+            }
+        });
     }
+
 
 }

@@ -6,6 +6,7 @@ public class User {
     public String name;
     public String username;
     public String email;
+    public boolean isFriend;
 
     public User(String name, String username, String email) {
         this.name = name;
@@ -16,5 +17,11 @@ public class User {
         this.id = id;
         this.username = username;
         this.email = email;
+    }
+    public User(int id, String username, String email, boolean isFriend) {
+        this.id = id;
+        this.username = username;
+        this.email = email;
+        this.isFriend = isFriend;
     }
 }

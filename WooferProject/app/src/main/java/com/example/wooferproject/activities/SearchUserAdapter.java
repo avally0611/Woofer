@@ -17,6 +17,8 @@ import com.example.wooferproject.managers.HomeScreenManager;
 import com.example.wooferproject.managers.SearchManager;
 import com.example.wooferproject.models.Post;
 import com.example.wooferproject.models.SearchUser;
+import android.content.Intent;
+import com.example.wooferproject.activities.UserProfileActivity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,6 +57,23 @@ public class SearchUserAdapter extends RecyclerView.Adapter<SearchUserAdapter.Us
 
         //now set username on template to real username
         holder.username.setText(currUser.getUsername());
+
+        // this allows for profile viewing
+        holder.username.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                Intent intent = new Intent(view.getContext(), UserProfileActivity.class);
+
+                // logged in user
+                intent.putExtra("current_user_id", myUserID);
+
+                // clicked profile user
+                intent.putExtra("target_user_id", currUser.getUserID());
+
+                view.getContext().startActivity(intent);
+            }
+        });
 
         //now we check if they friend or not friend to determine which icon
         if (currUser.isFriend())

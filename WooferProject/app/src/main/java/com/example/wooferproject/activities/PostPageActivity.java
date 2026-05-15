@@ -101,19 +101,25 @@ public class PostPageActivity extends AppCompatActivity {
                     userId,
                     textValue,
                     locationValue,
-                    imageBytes
+                    imageBytes,
+                    new PostPageManager.PostCallback() {
+                        @Override
+                        public void onSuccess(String message) {
+                            Toast.makeText(PostPageActivity.this, message, Toast.LENGTH_SHORT).show();
+                            // clears all fields on success
+                            caption.setText("");
+                            locationText.setText("No Location Selected");
+                            locationText.setEnabled(false);
+                            imageView.setImageDrawable(null);
+                            selectedImageUri = null;
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+                            Toast.makeText(PostPageActivity.this, error, Toast.LENGTH_LONG).show();
+                        }
+                    }
             );
-
-            // returns success to user after posting
-            Toast.makeText(this, "Post successful!", Toast.LENGTH_SHORT).show();
-
-            // clears all fields
-            caption.setText("");
-            locationText.setText("No Location Selected");
-            locationText.setEnabled(false);
-
-            imageView.setImageDrawable(null);
-            selectedImageUri = null;
         });
 
         // the following controls the location button and allows fro location infill;

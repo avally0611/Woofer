@@ -73,12 +73,12 @@ public class ProfilePageActivity extends AppCompatActivity {
             loadProfileImage();
         } else {
             Toast.makeText(this, "User session expired. Please login again.", Toast.LENGTH_LONG).show();
-            // Optional: Redirect to login
+            //  Redirect to login
         }
 
         if (returnBtn != null) {
             returnBtn.setOnClickListener(v -> {
-                // Simply finish this activity to go back to PreProfilePageActivity
+                //  finish this activity to go back to PreProfilePageActivity
                 finish();
             });
         }
@@ -91,7 +91,7 @@ public class ProfilePageActivity extends AppCompatActivity {
         }
 
 
-        // picks the pic
+        // picks the picture
         imagePickerLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {

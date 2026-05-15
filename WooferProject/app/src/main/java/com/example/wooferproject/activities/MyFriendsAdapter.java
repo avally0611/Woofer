@@ -6,11 +6,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.wooferproject.R;
+import com.example.wooferproject.managers.FriendManager;
 import com.example.wooferproject.models.User;
 
 import java.util.List;
@@ -18,41 +20,82 @@ import java.util.List;
 public class MyFriendsAdapter extends RecyclerView.Adapter<MyFriendsAdapter.FriendViewHolder> {
 
     private List<User> friendList;
-    private OnUnfriendClickListener unfriendClickListener;
+    private int currentUserId; // The person viewing the list
+    private OnFriendshipChangedListener friendshipChangedListener;
 
-    public interface OnUnfriendClickListener {
-        void onUnfriendClick(int position);
+    public interface OnFriendshipChangedListener {
+        void onFriendshipChanged(int position);
     }
 
-    public MyFriendsAdapter(List<User> friendList, OnUnfriendClickListener listener) {
+    public MyFriendsAdapter(List<User> friendList, int currentUserId, OnFriendshipChangedListener listener) {
         this.friendList = friendList;
-        this.unfriendClickListener = listener;
+        this.currentUserId = currentUserId;
+        this.friendshipChangedListener = listener;
     }
 
     @NonNull
     @Override
     public FriendViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        // Uses a single template and changing elements dynamically
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.friend_template, parent, false);
         return new FriendViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull FriendViewHolder holder, int position) {
-        User friend = friendList.get(position);
-        holder.friendUsername.setText(friend.username);
+        User user = friendList.get(position);
+        holder.friendUsername.setText(user.username);
 
-        holder.unfriendButton.setOnClickListener(v -> {
-            if (unfriendClickListener != null) {
-                unfriendClickListener.onUnfriendClick(position);
-            }
-        });
-        // Inside onBindViewHolder in FriendsAdapter.java
+        // Dynamically set the icon and color based on friendship status
+        if (user.isFriend) {
+            // They are already friends - show Unfriend option (Red Delete Icon)
+            holder.actionButton.setImageResource(R.drawable.ic_friend_remove);
+            holder.actionButton.setColorFilter(0xFFFF0000); // Red
+
+            holder.actionButton.setOnClickListener(v -> {
+                FriendManager.getInstance().unfriend(currentUserId, user.id, new FriendManager.ActionCallback() {
+                    @Override
+                    public void onSuccess(String message) {
+                        user.isFriend = false;
+                        notifyItemChanged(position);
+                        if (friendshipChangedListener != null) friendshipChangedListener.onFriendshipChanged(position);
+                        Toast.makeText(v.getContext(), message, Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+                        Toast.makeText(v.getContext(), "Error: " + error, Toast.LENGTH_SHORT).show();
+                    }
+                });
+            });
+        } else {
+            // They are NOT friends hense show Add Friend option (Black Add Icon)
+            holder.actionButton.setImageResource(R.drawable.ic_friend_add);
+            holder.actionButton.setColorFilter(0xFF000000); // Black
+
+            holder.actionButton.setOnClickListener(v -> {
+                FriendManager.getInstance().addFriend(currentUserId, user.id, new FriendManager.ActionCallback() {
+                    @Override
+                    public void onSuccess(String message) {
+                        user.isFriend = true;
+                        notifyItemChanged(position);
+                        if (friendshipChangedListener != null) friendshipChangedListener.onFriendshipChanged(position);
+                        Toast.makeText(v.getContext(), message, Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+                        Toast.makeText(v.getContext(), "Error: " + error, Toast.LENGTH_SHORT).show();
+                    }
+                });
+            });
+        }
+
         holder.friendUsername.setOnClickListener(v -> {
             Intent intent = new Intent(v.getContext(), UserProfileActivity.class);
-            intent.putExtra("target_user_id", friend.id); // The person whose profile you want to see
+            intent.putExtra("target_user_id", user.id);
             v.getContext().startActivity(intent);
         });
-
     }
 
     @Override
@@ -67,12 +110,16 @@ public class MyFriendsAdapter extends RecyclerView.Adapter<MyFriendsAdapter.Frie
 
     public static class FriendViewHolder extends RecyclerView.ViewHolder {
         TextView friendUsername;
-        ImageView unfriendButton;
+        ImageView actionButton;
 
         public FriendViewHolder(@NonNull View itemView) {
             super(itemView);
+            // Map to the IDs in your templates
             friendUsername = itemView.findViewById(R.id.friendUsername);
-            unfriendButton = itemView.findViewById(R.id.unfriendButton);
+            if (friendUsername == null) friendUsername = itemView.findViewById(R.id.username);
+
+            actionButton = itemView.findViewById(R.id.unfriendButton);
+            if (actionButton == null) actionButton = itemView.findViewById(R.id.friendButton);
         }
     }
 }

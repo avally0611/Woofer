@@ -1,11 +1,9 @@
-
 package com.example.wooferproject.activities;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -88,19 +86,32 @@ public class UserProfileActivity extends AppCompatActivity {
         postsRecyclerView.setAdapter(postAdapter);
     }
 
-    private void loadProfileDataAndCounts(int id) {
-        PreProfilePageManager.getProfileData(id, new PreProfilePageManager.ProfileDetailsCallback() {
-            @Override
-            public void onSuccess(User user, int pCount, int fCount) {
-                runOnUiThread(() -> {
-                    profileUsername.setText(user != null ? user.username : "Unknown");
-                    postsCount.setText(pCount + " Posts");
-                    friendsCount.setText(fCount + " Friends");
+    private void loadProfileDataAndCounts(int targetUserId) {
+
+        PreProfilePageManager.getProfileData(
+                this.targetUserId,
+                currentUserId,
+                new PreProfilePageManager.ProfileDetailsCallback() {
+
+                    @Override
+                    public void onSuccess(User user, int pCount, int fCount) {
+
+                        runOnUiThread(() -> {
+
+                            profileUsername.setText(
+                                    user != null ? user.username : "Unknown"
+                            );
+
+                            postsCount.setText(pCount + " Posts");
+                            friendsCount.setText(fCount + " Friends");
+                        });
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+
+                    }
                 });
-            }
-            @Override
-            public void onFailure(String error) { /* handle error */ }
-        });
     }
 
     private void loadProfileImage(int id) {

@@ -10,51 +10,58 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.wooferproject.R;
-import com.example.wooferproject.managers.PreProfilePageManager;
+import com.example.wooferproject.managers.FriendManager;
 import com.example.wooferproject.models.User;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class MyFriendsListActivity extends AppCompatActivity implements MyFriendsAdapter.OnUnfriendClickListener {
+public class MyFriendsListActivity extends AppCompatActivity {
 
     private RecyclerView friendsRecyclerView;
     private MyFriendsAdapter friendsAdapter;
     private List<User> friendsList;
-    private int currentUserId;
+    private int targetUserId; // The person whose friends list we are viewing
+    private int loggedInUserId; // The person currently logged in
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.friend_list);
 
-        PreProfilePageManager.init(this);
+        // Initialize Managers
+        FriendManager.init(this);
 
+        // Get IDs
+        targetUserId = getIntent().getIntExtra("user_id", -1);
         SharedPreferences prefs = getSharedPreferences("WooferPrefs", MODE_PRIVATE);
-        currentUserId = prefs.getInt("user_id", -1);
+        loggedInUserId = prefs.getInt("user_id", -1);
 
-        if (currentUserId == -1) {
-            Toast.makeText(this, "User ID not found. Please log in.", Toast.LENGTH_LONG).show();
+        if (targetUserId == -1 || loggedInUserId == -1) {
+            Toast.makeText(this, "Error: User not found. Please log in.", Toast.LENGTH_LONG).show();
             finish();
             return;
         }
 
+        // Setup RecyclerView
         friendsRecyclerView = findViewById(R.id.friendsRecyclerView);
         friendsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         friendsList = new ArrayList<>();
-        friendsAdapter = new MyFriendsAdapter(friendsList, this);
+        friendsAdapter = new MyFriendsAdapter(friendsList, loggedInUserId, position -> {
+            // Optional: Handle friendship change event
+        });
         friendsRecyclerView.setAdapter(friendsAdapter);
 
         loadFriends();
+
+        // Back Button
         ImageButton backButton = findViewById(R.id.backButton);
-        backButton.setOnClickListener(v -> {
-            finish(); // This closes the current activity and takes you back
-        });
+        backButton.setOnClickListener(v -> finish());
     }
 
     private void loadFriends() {
-        PreProfilePageManager.getFriends(currentUserId, new PreProfilePageManager.FriendsCallback() {
+        FriendManager.getInstance().getFriends(targetUserId, loggedInUserId, new FriendManager.FriendsCallback() {
             @Override
             public void onSuccess(List<User> friends) {
                 runOnUiThread(() -> {
@@ -71,28 +78,6 @@ public class MyFriendsListActivity extends AppCompatActivity implements MyFriend
             public void onFailure(String error) {
                 runOnUiThread(() ->
                         Toast.makeText(MyFriendsListActivity.this, "Error loading friends: " + error, Toast.LENGTH_SHORT).show()
-                );
-            }
-        });
-    }
-
-    @Override
-    public void onUnfriendClick(int position) {
-        User friendToUnfriend = friendsList.get(position);
-        PreProfilePageManager.unfriend(currentUserId, friendToUnfriend.id, new PreProfilePageManager.UnfriendCallback() {
-            @Override
-            public void onSuccess(String message) {
-                runOnUiThread(() -> {
-                    Toast.makeText(MyFriendsListActivity.this, message, Toast.LENGTH_SHORT).show();
-                    friendsList.remove(position);
-                    friendsAdapter.notifyItemRemoved(position);
-                });
-            }
-
-            @Override
-            public void onFailure(String error) {
-                runOnUiThread(() ->
-                        Toast.makeText(MyFriendsListActivity.this, "Error unfriending: " + error, Toast.LENGTH_SHORT).show()
                 );
             }
         });

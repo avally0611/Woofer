@@ -7,97 +7,95 @@ import android.os.Looper;
 import android.util.Base64;
 import android.util.Log;
 
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.StringRequest;
 import com.example.wooferproject.models.User;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.DataOutputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
+
+import java.io.IOException;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class ProfilePageManager {
 
     private static final String TAG = "ProfilePageManager";
-    private static RequestQueue requestQueue;
+    private static final OkHttpClient c = new OkHttpClient();
+    // this is used to connect to the internet/ Volley can also be used instead
     private static final String BASE_URL = "https://wmc.ms.wits.ac.za/students/sgroup2668/";
 
     // Update the profile
     public static void updateProfile(int userId, String name, String username, String email) {
+        RequestBody formBody = new FormBody.Builder()
+                .add("id", String.valueOf(userId))
+                .add("name", name)
+                .add("username", username)
+                .add("email", email)
+                .build();
 
-        new Thread(() -> {
-            try {
-                URL url = new URL("https://wmc.ms.wits.ac.za/students/sgroup2668/update_profile.php");
+        Request request = new Request.Builder()
+                .url(BASE_URL + "update_profile.php")
+                .post(formBody)
+                .build();
 
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("POST");
-                conn.setDoOutput(true);
-
-                String data =
-                        "id=" + userId +
-                                "&name=" + name +
-                                "&username=" + username +
-                                "&email=" + email;
-
-                OutputStream os = conn.getOutputStream();
-                os.write(data.getBytes());
-                os.flush();
-                os.close();
-                conn.getInputStream();
-
-            } catch (Exception e) {
-                e.printStackTrace();
+        c.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.e(TAG, "Update failed: " + e.getMessage());
             }
-        }).start();
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "Profile updated successfully");
+                }
+            }
+        });
     }
 
     // Get the profile
     public static void getProfile(int userId, Callback callback) {
+        Request request = new Request.Builder()
+                .url(BASE_URL + "get_profile.php?id=" + userId)
+                .build();
 
-        new Thread(() -> {
-            try {
-                URL url = new URL("https://wmc.ms.wits.ac.za/students/sgroup2668/get_profile.php?id=" + userId);
-
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
-
-                BufferedReader br = new BufferedReader(
-                        new InputStreamReader(conn.getInputStream())
-                );
-
-                StringBuilder result = new StringBuilder();
-                String line;
-
-                while ((line = br.readLine()) != null) {
-                    result.append(line);
-                }
-
-                JSONObject json = new JSONObject(result.toString());
-
-                if (!json.getBoolean("success")) {
-                    callback.onFailure(json.getString("message"));
-                    return;
-                }
-
-                User user = new User(
-                        json.getString("name"),
-                        json.getString("username"),
-                        json.getString("email")
-                );
-
-                callback.onSuccess(user);
-
-            } catch (Exception e) {
+        c.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
                 callback.onFailure(e.getMessage());
             }
-        }).start();
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    try {
+                        String responseData = response.body().string();
+                        JSONObject json = new JSONObject(responseData);
+                        if (!json.getBoolean("success")) {
+                            callback.onFailure(json.getString("message"));
+                            return;
+                        }
+                        User user = new User(
+                                json.getString("name"),
+                                json.getString("username"),
+                                json.getString("email")
+                        );
+                        new Handler(Looper.getMainLooper()).post(() -> callback.onSuccess(user));
+                    } catch (JSONException e) {
+                        callback.onFailure("Parse error");
+                    }
+                } else {
+                    callback.onFailure("Server error: " + response.code());
+                }
+            }
+        });
     }
 
     // callback interface, helps with the getprofile method
@@ -112,113 +110,97 @@ public class ProfilePageManager {
     }
     // this is for profile image
     public static void uploadProfileImage(int userId, byte[] imageBytes) {
+        RequestBody requestBody = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("id", String.valueOf(userId))
+                .addFormDataPart("image", "profile.jpg",
+                        RequestBody.create(MediaType.parse("image/jpeg"), imageBytes))
+                .build();
 
-        new Thread(() -> {
-            try {
+        Request request = new Request.Builder()
+                .url(BASE_URL + "upload_profile_pic.php")
+                .post(requestBody)
+                .build();
 
-                String boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW";
-                URL url = new URL("https://wmc.ms.wits.ac.za/students/sgroup2668/upload_profile_pic.php");
+        c.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.e(TAG, "Image upload failed: " + e.getMessage());
+            }
 
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("POST");
-                conn.setDoOutput(true);
-                conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
-
-                DataOutputStream dos = new DataOutputStream(conn.getOutputStream());
-
-                // user id
-                dos.writeBytes("--" + boundary + "\r\n");
-                dos.writeBytes("Content-Disposition: form-data; name=\"id\"\r\n\r\n");
-                dos.writeBytes(String.valueOf(userId) + "\r\n");
-
-                // image
-                dos.writeBytes("--" + boundary + "\r\n");
-                dos.writeBytes("Content-Disposition: form-data; name=\"image\"; filename=\"profile.jpg\"\r\n");
-                dos.writeBytes("Content-Type: image/jpeg\r\n\r\n");
-                dos.write(imageBytes);
-                dos.writeBytes("\r\n");
-
-                dos.writeBytes("--" + boundary + "--\r\n");
-                dos.flush();
-                dos.close();
-
-                conn.getResponseCode(); // Trigger request
-                int responseCode = conn.getResponseCode();
-                if (responseCode == HttpURLConnection.HTTP_OK) {
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
                     Log.d(TAG, "Image upload successful");
                 } else {
-                    Log.e(TAG, "Image upload failed with code: " + responseCode);
+                    Log.e(TAG, "Image upload failed with code: " + response.code());
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
-        }).start();
+        });
     }
 
-    // this geta the image from the database
+    // this gets the image from the database
     public static void getProfileImage(int userId, ImageCallback callback) {
-        new Thread(() -> {
-            try {
-                long timestamp = System.currentTimeMillis();
-                URL url = new URL(BASE_URL + "get_profile_pic.php?id=" + userId + "&t=" + timestamp);
+        long timestamp = System.currentTimeMillis();
+        Request request = new Request.Builder()
+                .url(BASE_URL + "get_profile_pic.php?id=" + userId + "&t=" + timestamp)
+                .build();
 
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
-                conn.setUseCaches(false); // Disable caching at the connection level
-
-                BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                StringBuilder result = new StringBuilder();
-                String line;
-                while ((line = br.readLine()) != null) {
-                    result.append(line);
-                }
-                br.close();
-
-                String base64 = result.toString().trim();
-                Handler mainHandler = new Handler(Looper.getMainLooper());
-
-                if (base64.isEmpty() || base64.equals("null")) {
-                    mainHandler.post(() -> callback.onFailure("No image found"));
-                } else {
-                    byte[] decoded = Base64.decode(base64, Base64.DEFAULT);
-                    mainHandler.post(() -> callback.onSuccess(decoded));
-                }
-            } catch (Exception e) {
+        c.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
                 new Handler(Looper.getMainLooper()).post(() -> callback.onFailure(e.getMessage()));
             }
-        }).start();
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    String base64 = response.body().string().trim();
+                    Handler mainHandler = new Handler(Looper.getMainLooper());
+                    if (base64.isEmpty() || base64.equals("null")) {
+                        mainHandler.post(() -> callback.onFailure("No image found"));
+                    } else {
+                        byte[] decoded = Base64.decode(base64, Base64.DEFAULT);
+                        mainHandler.post(() -> callback.onSuccess(decoded));
+                    }
+                } else {
+                    new Handler(Looper.getMainLooper()).post(() -> callback.onFailure("Server error: " + response.code()));
+                }
+            }
+        });
     }
+    // this allows for account deletion
     public static void deleteAccount(int userId, DeleteCallback callback) {
-        if (requestQueue == null) {
-            callback.onFailure("RequestQueue not initialized.");
-            return;
-        }
+        Request request = new Request.Builder()
+                .url(BASE_URL + "delete_account.php?id=" + userId)
+                .build();
 
-        String url = BASE_URL + "delete_account.php?id=" + userId;
+        c.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                new Handler(Looper.getMainLooper()).post(() -> callback.onFailure("Network error: " + e.getMessage()));
+            }
 
-        StringRequest deleteRequest = new StringRequest(
-                Request.Method.GET,
-                url,
-                response -> {
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
                     try {
-                        JSONObject jsonResponse = new JSONObject(response);
+                        String responseData = response.body().string();
+                        JSONObject jsonResponse = new JSONObject(responseData);
+                        Handler mainHandler = new Handler(Looper.getMainLooper());
                         if (jsonResponse.getBoolean("success")) {
-                            callback.onSuccess();
+                            mainHandler.post(callback::onSuccess);
                         } else {
-                            callback.onFailure(jsonResponse.optString("message", "Failed to delete account"));
+                            mainHandler.post(() -> callback.onFailure(jsonResponse.optString("message", "Failed to delete account")));
                         }
                     } catch (JSONException e) {
-                        Log.e(TAG, "Delete parse error", e);
-                        callback.onFailure("Parse error during deletion");
+                        new Handler(Looper.getMainLooper()).post(() -> callback.onFailure("Parse error during deletion"));
                     }
-                },
-                error -> {
-                    Log.e(TAG, "Delete network error", error);
-                    callback.onFailure("Network error: " + error.getMessage());
+                } else {
+                    new Handler(Looper.getMainLooper()).post(() -> callback.onFailure("Server error: " + response.code()));
                 }
-        );
-
-        requestQueue.add(deleteRequest);
+            }
+        });
     }
 
     public interface ImageCallback {

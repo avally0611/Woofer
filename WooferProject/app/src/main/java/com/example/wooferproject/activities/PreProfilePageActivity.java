@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.wooferproject.R;
 import com.example.wooferproject.managers.PreProfilePageManager;
+import com.example.wooferproject.activities.StaticPostAdapter;
 import com.example.wooferproject.models.Post;
 import com.example.wooferproject.models.User;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -31,7 +32,7 @@ public class PreProfilePageActivity extends AppCompatActivity {
     private Button preProfileManageButton;
     private RecyclerView preProfilePostsRecyclerView;
 
-    private PostAdapter postAdapter;
+    private StaticPostAdapter postAdapter;
     private int userId;
 
     @Override
@@ -86,7 +87,7 @@ public class PreProfilePageActivity extends AppCompatActivity {
 
     private void setupRecyclerView() {
         preProfilePostsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        postAdapter = new PostAdapter(new ArrayList<>());
+        postAdapter = new StaticPostAdapter(new ArrayList<>());
         preProfilePostsRecyclerView.setAdapter(postAdapter);
     }
 
@@ -104,7 +105,7 @@ public class PreProfilePageActivity extends AppCompatActivity {
 
 
     private void loadProfileDataAndCounts(int userId) {
-        PreProfilePageManager.getProfileData(userId, new PreProfilePageManager.ProfileDetailsCallback() {
+        PreProfilePageManager.getProfileData(userId, userId, new PreProfilePageManager.ProfileDetailsCallback() {
             @Override
             public void onSuccess(User user, int postCount, int friendCount) {
                 runOnUiThread(() -> {
