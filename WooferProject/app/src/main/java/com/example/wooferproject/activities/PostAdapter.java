@@ -88,14 +88,27 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
 
         if (imgString != null && !imgString.equalsIgnoreCase("null") && !imgString.trim().isEmpty())
         {
-            //so the image was sent in base 64 string format so dstabae could hold image nicely - decode back to byte array
-            byte[] decodedString = Base64.decode(imgString, Base64.DEFAULT);
-            //now we convert the byte array into a bitmap picture - now in prop pic format
-            Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+            try
+            {
+                if (imgString.contains(","))
+                {
+                    imgString = imgString.split(",")[1];
+                }
+                //so the image was sent in base 64 string format so dstabae could hold image nicely - decode back to byte array
+                byte[] decodedString = Base64.decode(imgString, Base64.DEFAULT);
+                //now we convert the byte array into a bitmap picture - now in prop pic format
+                Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
 
-            //now we can take image and set it to imageview attribute
-            holder.image.setImageBitmap(decodedByte);
-            holder.image.setVisibility(View.VISIBLE);
+                //now we can take image and set it to imageview attribute
+                holder.image.setImageBitmap(decodedByte);
+                holder.image.setVisibility(View.VISIBLE);
+
+            }
+            catch(Exception e)
+            {
+                e.printStackTrace();
+                holder.image.setVisibility(View.GONE);
+            }
 
         }
         else

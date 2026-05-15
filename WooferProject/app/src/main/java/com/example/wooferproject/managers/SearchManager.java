@@ -112,4 +112,48 @@ public class SearchManager {
         });
 
     }
+
+    public void getMutuals(int userId, SearchCallBack callback) {
+
+        RequestBody formBody = new FormBody.Builder()
+                .add("my_user_id", String.valueOf(userId))
+                .build();
+
+        Request request = new Request.Builder()
+                .url("https://wmc.ms.wits.ac.za/students/sgroup2668/get_mutuals.php")
+                .post(formBody)
+                .build();
+
+        c.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(okhttp3.Call call, java.io.IOException e) {
+                callback.onFailure("Network Error: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
+                if (!response.isSuccessful()) {
+                    callback.onFailure("Server Error");
+                    return;
+                }
+                try {
+                    String responseData = response.body().string();
+                    JSONArray jsonArray = new JSONArray(responseData);
+                    ArrayList<SearchUser> mutualList = new ArrayList<>();
+
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        JSONObject userObj = jsonArray.getJSONObject(i);
+                        mutualList.add(new SearchUser(
+                                userObj.getInt("user_id"),
+                                userObj.getString("username"),
+                                userObj.getBoolean("is_friend")
+                        ));
+                    }
+                    callback.onSuccess(mutualList);
+                } catch (org.json.JSONException e) {
+                    callback.onFailure("JSON Error");
+                }
+            }
+        });
+    }
 }

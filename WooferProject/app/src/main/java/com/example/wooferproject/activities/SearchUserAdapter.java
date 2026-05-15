@@ -28,9 +28,10 @@ public class SearchUserAdapter extends RecyclerView.Adapter<SearchUserAdapter.Us
     private int myUserID;
 
         //this allows search actity to send the list users to the adapter so it can start
-    public SearchUserAdapter(ArrayList<SearchUser> users)
+    public SearchUserAdapter(ArrayList<SearchUser> users, int myUserID)
     {
         this.users = users;
+        this.myUserID = myUserID;
     }
 
     //okay so we first create a blank card so as soon as screen is made we can display on screen

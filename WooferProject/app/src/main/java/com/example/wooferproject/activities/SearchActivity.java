@@ -41,14 +41,38 @@ public class SearchActivity extends AppCompatActivity {
         mutualsRecyclerView = findViewById(R.id.mutualsRecyclerView);
         searchResultsRecyclerView = findViewById(R.id.searchResultsRecyclerView);
 
-
+        searchList = new ArrayList<>();
         searchManager = new SearchManager();
 
-        searchAdapter = new SearchUserAdapter(searchList);
+        searchAdapter = new SearchUserAdapter(searchList, userId);
         //setting layout inside recyler as linear layout so everythign is stacked vertically
         searchResultsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         //connect searchadapter file to our empty recycler view so that the adapter can add the users searched info to our recycler view
         searchResultsRecyclerView.setAdapter(searchAdapter);
+
+
+        //HERE WE GET MUTUAL SUGG FROM MANAGRER FROM DB
+        ArrayList<SearchUser> mutualsList = new ArrayList<SearchUser>();
+        SearchUserAdapter mutualsAdapter = new SearchUserAdapter(mutualsList, userId);
+        mutualsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mutualsRecyclerView.setAdapter(mutualsAdapter);
+
+        searchManager.getMutuals(userId, new SearchCallBack() {
+            @Override
+            public void onSuccess(ArrayList<SearchUser> fetchedUsers) {
+                runOnUiThread(() -> {
+                    mutualsList.clear();
+                    mutualsList.addAll(fetchedUsers);
+                    mutualsAdapter.notifyDataSetChanged();
+                });
+            }
+
+            @Override
+            public void onFailure(String error) {
+                // If it fails, maybe just silently fail so it doesn't bother the user
+                android.util.Log.e("BondMutuals", error);
+            }
+        });
 
 
         //now we add a listenting event that waits and listens for a keypress in search bar
