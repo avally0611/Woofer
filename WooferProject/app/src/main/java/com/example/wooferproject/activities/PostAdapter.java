@@ -23,11 +23,13 @@ import java.util.List;
 public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder>
 {
     private ArrayList<Post> posts;
+    private int currUserID;
 
     //this allows home actity to send the list posts to the adapter so it can start drawing the cards
-    public PostAdapter(ArrayList<Post> posts)
+    public PostAdapter(ArrayList<Post> posts, int currUserID)
     {
         this.posts = posts;
+        this.currUserID = currUserID;
     }
 
     //okay so we first create a blank card so as soon as screen is made we can display on screen
@@ -125,10 +127,12 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         //here is where we change colour if user clicked button or unvoted
         if (currPost.isUserUpvoted())
         {
+            holder.upvoteButton.setImageResource(R.drawable.ic_heart_filled);
             holder.upvoteButton.setColorFilter(android.graphics.Color.RED);
         }
         else
         {
+            holder.upvoteButton.setImageResource(R.drawable.ic_heart_empty);
             holder.upvoteButton.setColorFilter(android.graphics.Color.BLACK);
         }
 
@@ -148,7 +152,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                     holder.upvoteButton.setColorFilter(android.graphics.Color.BLACK);
 
                     //then also need to update db - UNCLICKING SO REMOVE
-                    m.sendUpvote(currPost.getPostid(), "remove");
+                    m.sendUpvote(currUserID,currPost.getPostid(), "remove");
                 }
 
                 //otherwise nit clciked so actually wanna upvoet
@@ -160,7 +164,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                     holder.upvoteButton.setColorFilter(android.graphics.Color.RED);
 
                     //update db - adding an upvote
-                    m.sendUpvote(currPost.getPostid(), "add");
+                    m.sendUpvote(currUserID, currPost.getPostid(), "add");
                 }
 
                 // updating number on the screen

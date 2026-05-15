@@ -78,8 +78,12 @@ public class HomeScreenManager {
                     {
                         JSONObject jsonPost = jsonArr.getJSONObject(i);
 
-                        posts.add(new Post(jsonPost.getString("username"), jsonPost.optString("text", ""), jsonPost.optString("location", ""), jsonPost.optString("image", ""),jsonPost.getInt("post_id"), jsonPost.optInt("upvotes",0)));
+                        Post newPost = new Post(jsonPost.getString("username"), jsonPost.optString("text", ""), jsonPost.optString("location", ""), jsonPost.optString("image", ""),jsonPost.getInt("post_id"), jsonPost.optInt("upvotes",0));
+                        boolean userUpVoted = jsonPost.optBoolean("user_upvoted", false);
+                        newPost.setUserUpvoted(userUpVoted);
+                        posts.add(newPost);
                     }
+
 
                     //okay so we got our posts objects - so can signal actviity class and send arraylist for UI update
                     pc.onSuccess(posts);
@@ -96,9 +100,10 @@ public class HomeScreenManager {
 
     //okay now we need a separate function to handle the upvotes
     // This fires silently in the background whenever a user taps the heart
-    public void sendUpvote(int postId, String action) {
+    public void sendUpvote(int userID, int postId, String action) {
 
         RequestBody formBody = new FormBody.Builder()
+                .add("my_user_id", String.valueOf(userID))
                 .add("post_id", String.valueOf(postId))
                 .add("action", action) //wheter to icnrease or decrease upvote
                 .build();
