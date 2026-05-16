@@ -11,7 +11,7 @@
         android:layout_height="50dp"
         android:layout_margin="16dp"
         android:background="@android:drawable/editbox_background_normal"
-        android:drawableEnd="@drawable/ic_search"
+        android:drawableStart="@drawable/ic_search"
         android:hint="Enter Username Here..."
         android:inputType="text"
         android:paddingStart="12dp"

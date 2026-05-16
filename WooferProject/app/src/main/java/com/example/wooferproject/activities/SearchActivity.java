@@ -145,6 +145,24 @@ public class SearchActivity extends AppCompatActivity {
             @Override
             public void afterTextChanged(Editable s)
             {
+                //so ive noticed if user searches and removes or add someone then presses x or backspace to see mtuausl, doesnt refresh - so we gotta refresh
+                if (s.toString().trim().isEmpty()) {
+                    searchManager.getMutuals(userId, new SearchCallBack() {
+                        @Override
+                        public void onSuccess(ArrayList<SearchUser> fetchedUsers) {
+                            runOnUiThread(() -> {
+                                mutualsList.clear();
+                                mutualsList.addAll(fetchedUsers);
+                                mutualsAdapter.notifyDataSetChanged();
+                            });
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+                            android.util.Log.e("Error updating mutuals", error);
+                        }
+                    });
+                }
             }
         });
 
