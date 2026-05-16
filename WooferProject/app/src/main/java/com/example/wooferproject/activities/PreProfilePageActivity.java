@@ -94,7 +94,7 @@ public class PreProfilePageActivity extends AppCompatActivity {
     private void setupManageButton() {
         preProfileManageButton.setOnClickListener(v -> {
             // This will show a message on screen so you know the click worked
-            Toast.makeText(this, " Opening Profile...", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, " Opening...", Toast.LENGTH_SHORT).show();
 
             Intent intent = new Intent(PreProfilePageActivity.this, ProfilePageActivity.class);
             intent.putExtra("user_id", userId);

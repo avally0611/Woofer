@@ -37,7 +37,7 @@ public class PostPageManager {
         if ((text == null || text.trim().isEmpty()) &&
                 (location == null || location.trim().isEmpty()) &&
                 (imageBytes == null || imageBytes.length == 0)) {
-            callback.onFailure("At least one field (text, location, or image) must be filled.");
+            callback.onFailure("Error: Please fill in text, location or image.");
             return;
         }
 

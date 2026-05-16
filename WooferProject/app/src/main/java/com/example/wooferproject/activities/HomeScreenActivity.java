@@ -46,7 +46,7 @@ public class HomeScreenActivity extends AppCompatActivity
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         //connect postadapter file to our empty recycler view so that the adapter can add the posts info to our recycler view
-        adapter = new PostAdapter(posts);
+        adapter = new PostAdapter(posts,userId);
         recyclerView.setAdapter(adapter);
 
 

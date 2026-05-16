@@ -30,6 +30,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
+
 public class PreProfilePageManager {
     private static final OkHttpClient c = new OkHttpClient();
     // thi is used to connect to the internet/ Volley can also be used instead
@@ -390,6 +391,5 @@ public class PreProfilePageManager {
             }
         });
     }
-
 
 }

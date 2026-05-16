@@ -82,7 +82,11 @@ public class UserProfileActivity extends AppCompatActivity {
 
     private void setupRecyclerView() {
         postsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+<<<<<<< HEAD
         postAdapter = new StaticPostAdapter(new ArrayList<>());
+=======
+        postAdapter = new PostAdapter(new ArrayList<>(), currentUserId);
+>>>>>>> e8296d27c344415ca56e7532de40f9852128e2db
         postsRecyclerView.setAdapter(postAdapter);
     }
 
