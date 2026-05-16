@@ -70,6 +70,8 @@ public class HomeScreenManager {
                     //now convert raw text into JSON array
                     JSONArray jsonArr = new JSONArray(responseData);
 
+
+
                     //now we put this post objects into an arraylist:
 
                     ArrayList<Post> posts = new ArrayList<Post>();

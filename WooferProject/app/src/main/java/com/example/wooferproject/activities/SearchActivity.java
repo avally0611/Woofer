@@ -6,6 +6,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -25,6 +26,7 @@ public class SearchActivity extends AppCompatActivity {
     private EditText searchBar;
     private RecyclerView mutualsRecyclerView;
     private RecyclerView searchResultsRecyclerView;
+    private ImageView xButton;
 
     private SearchUserAdapter searchAdapter;
     private SearchManager searchManager;
@@ -40,7 +42,7 @@ public class SearchActivity extends AppCompatActivity {
         searchBar = findViewById(R.id.searchBar);
         mutualsRecyclerView = findViewById(R.id.mutualsRecyclerView);
         searchResultsRecyclerView = findViewById(R.id.searchResultsRecyclerView);
-
+        xButton = findViewById(R.id.xButton);
         searchList = new ArrayList<>();
         searchManager = new SearchManager();
 
@@ -91,6 +93,8 @@ public class SearchActivity extends AppCompatActivity {
                 //user hasnt type anything
                 if (currentTyping.isEmpty())
                 {
+                    //hide button because search is empty
+                    xButton.setVisibility(View.GONE);
                     searchResultsRecyclerView.setVisibility(View.GONE);
                     mutualsRecyclerView.setVisibility(View.VISIBLE);
                     searchList.clear();
@@ -99,6 +103,7 @@ public class SearchActivity extends AppCompatActivity {
                 else
                 {
                     //first do changes in ui if they typing
+                    xButton.setVisibility(View.VISIBLE);
                     mutualsRecyclerView.setVisibility(View.GONE);
                     searchResultsRecyclerView.setVisibility(View.VISIBLE);
 
@@ -140,11 +145,20 @@ public class SearchActivity extends AppCompatActivity {
             @Override
             public void afterTextChanged(Editable s)
             {
-
             }
         });
 
 
+        //so now just need to check if user clciks x button then it cclears search bar and shows mutuals & only show x button when user typing in search
+        xButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                searchBar.setText("");
+                searchBar.clearFocus();
+            }
+        });
+
+        //--------
         // this allows the bottom navigation menu to be used
         BottomNavigationView bottomNav = findViewById(R.id.navigationBar);
         setupBottomNav(bottomNav);
