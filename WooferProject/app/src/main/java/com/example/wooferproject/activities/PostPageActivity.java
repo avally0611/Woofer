@@ -44,6 +44,7 @@ public class PostPageActivity extends AppCompatActivity {
         // almost like initialising the items on screen
         caption = findViewById(R.id.addText);
         locationText = findViewById(R.id.location);
+        locationText.setEnabled(false);
         imageBtn = findViewById(R.id.imageButt);
         imageView = findViewById(R.id.imageView);
         postBtn = findViewById(R.id.postButton);
@@ -126,18 +127,16 @@ public class PostPageActivity extends AppCompatActivity {
         Button locationBtn = findViewById(R.id.locationButt);
 
         locationBtn.setOnClickListener(v -> {
-
             if (!locationText.isEnabled()) {
-
                 // turn editing ON
                 locationText.setEnabled(true);
+                locationText.setFocusableInTouchMode(true);
                 locationText.setText("");
                 locationText.requestFocus();
-
             } else {
-
                 // turn editing OFF (lock it)
                 locationText.setEnabled(false);
+                locationText.setFocusable(false);
 
                 if (locationText.getText().toString().trim().isEmpty()) {
                     locationText.setText("No Location Selected");

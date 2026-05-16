@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ImageButton;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -25,6 +26,7 @@ public class UserProfileActivity extends AppCompatActivity {
 
     private ImageView profileImage;
     private TextView profileUsername, postsCount, friendsCount;
+    private ImageButton returnBtn;
 
     private RecyclerView postsRecyclerView;
     private StaticPostAdapter postAdapter;
@@ -71,6 +73,11 @@ public class UserProfileActivity extends AppCompatActivity {
         postsCount = findViewById(R.id.profile_posts_count);
         friendsCount = findViewById(R.id.profile_friends_count);
         postsRecyclerView = findViewById(R.id.profile_posts_recyclerview);
+        returnBtn = findViewById(R.id.return_btn);
+        
+        // this is the return btn (onBackPressed is an android studio function) and takes you to the previous page
+        returnBtn.setOnClickListener(v -> onBackPressed());
+
 
         // Clicking friends count shows THEIR friends
         friendsCount.setOnClickListener(v -> {
