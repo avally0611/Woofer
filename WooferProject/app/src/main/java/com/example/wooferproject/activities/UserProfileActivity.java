@@ -25,7 +25,7 @@ import java.util.List;
 public class UserProfileActivity extends AppCompatActivity {
 
     private ImageView profileImage;
-    private TextView profileUsername, postsCount, friendsCount;
+    private TextView profileUsername, postsCount, friendsCount, privacyMessage;
     private ImageButton returnBtn;
 
     private RecyclerView postsRecyclerView;
@@ -72,9 +72,10 @@ public class UserProfileActivity extends AppCompatActivity {
         profileUsername = findViewById(R.id.profile_username);
         postsCount = findViewById(R.id.profile_posts_count);
         friendsCount = findViewById(R.id.profile_friends_count);
+        privacyMessage = findViewById(R.id.privacy_message);
         postsRecyclerView = findViewById(R.id.profile_posts_recyclerview);
         returnBtn = findViewById(R.id.return_btn);
-        
+
         // this is the return btn (onBackPressed is an android studio function) and takes you to the previous page
         returnBtn.setOnClickListener(v -> onBackPressed());
 
@@ -90,7 +91,8 @@ public class UserProfileActivity extends AppCompatActivity {
     private void setupRecyclerView() {
         postsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        postAdapter = new StaticPostAdapter(new ArrayList<>(),false);
+        // Fix: Pass false because this is someone else's profile
+        postAdapter = new StaticPostAdapter(new ArrayList<Post>(), false);
 
         postsRecyclerView.setAdapter(postAdapter);
     }
@@ -103,7 +105,7 @@ public class UserProfileActivity extends AppCompatActivity {
                 new PreProfilePageManager.ProfileDetailsCallback() {
 
                     @Override
-                    public void onSuccess(User user, int pCount, int fCount) {
+                    public void onSuccess(User user, int pCount, int fCount, boolean isFriend) {
 
                         runOnUiThread(() -> {
 
@@ -113,6 +115,17 @@ public class UserProfileActivity extends AppCompatActivity {
 
                             postsCount.setText(pCount + " Posts");
                             friendsCount.setText(fCount + " Friends");
+
+                            // Privacy Logic: Only show posts if they are friends
+                            if (isFriend) {
+                                postsRecyclerView.setVisibility(android.view.View.VISIBLE);
+                                privacyMessage.setVisibility(android.view.View.GONE);
+                            } else {
+                                postsRecyclerView.setVisibility(android.view.View.GONE);
+                                privacyMessage.setVisibility(android.view.View.VISIBLE);
+                                privacyMessage.setText("Return to the previous page to \nFriend " + user.username + " to see their posts");
+
+                            }
                         });
                     }
 

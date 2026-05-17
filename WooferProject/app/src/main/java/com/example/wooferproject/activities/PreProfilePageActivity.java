@@ -107,7 +107,7 @@ public class PreProfilePageActivity extends AppCompatActivity {
     private void loadProfileDataAndCounts(int userId) {
         PreProfilePageManager.getProfileData(userId, userId, new PreProfilePageManager.ProfileDetailsCallback() {
             @Override
-            public void onSuccess(User user, int postCount, int friendCount) {
+            public void onSuccess(User user, int postCount, int friendCount, boolean isFriend) {
                 runOnUiThread(() -> {
                     if (user != null) {
                         preProfileUsername.setText(user.username);

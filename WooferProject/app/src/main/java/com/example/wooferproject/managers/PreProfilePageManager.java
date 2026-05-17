@@ -48,7 +48,7 @@ public class PreProfilePageManager {
 
     // gets the text details of the profile
     public interface ProfileDetailsCallback {
-        void onSuccess(User user, int postCount, int friendCount);
+        void onSuccess(User user, int postCount, int friendCount, boolean isFriend);
         void onFailure(String error);
     }
 
@@ -147,7 +147,7 @@ public class PreProfilePageManager {
                         if (countsJson.getBoolean("success")) {
                             int postCount = countsJson.getInt("post_count");
                             int friendCount = countsJson.getInt("friend_count");
-                            new Handler(Looper.getMainLooper()).post(() -> callback.onSuccess(user, postCount, friendCount));
+                            new Handler(Looper.getMainLooper()).post(() -> callback.onSuccess(user, postCount, friendCount, user.isFriend));
                         } else {
                             callback.onFailure(countsJson.optString("message", "Error fetching counts"));
                         }
