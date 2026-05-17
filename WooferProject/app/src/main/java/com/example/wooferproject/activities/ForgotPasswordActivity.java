@@ -5,6 +5,7 @@ import android.os.CountDownTimer;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,6 +20,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
     private TextInputLayout passwordInputLayout;
     private Button sendCodeBtn, verifyCodeBtn, resetPasswordBtn;
     private TextView noCodeText;
+    private ImageButton returnBtn;
     private ForgotPasswordManager manager;
     private boolean isResend = false;
     private long lastSendTime = 0;
@@ -39,6 +41,11 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         resetPasswordBtn = findViewById(R.id.resetPassword);
         noCodeText = findViewById(R.id.noCode);
         manager = new ForgotPasswordManager();
+
+        returnBtn = findViewById(R.id.return_btn);
+
+        // this is the return btn (onBackPressed is an android studio function) and takes you to the previous page
+        returnBtn.setOnClickListener(v -> onBackPressed());
 
         // This section links the buttons to their respective logic for sending, 
         // verifying, and finally resetting the password.
