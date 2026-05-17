@@ -13,8 +13,13 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
+/**
+ * This class handles all the background communication for user login. 
+ * It acts as the bridge between our login screen and the server database.
+ */
 public class LoginManager {
 
+    // We use OkHttpClient to manage our connection to the internet.
     private final OkHttpClient client = new OkHttpClient();
 
     public interface LoginCallback {
@@ -22,6 +27,8 @@ public class LoginManager {
         void onFailure(String error);
     }
 
+    // This section prepares the network request, sends the credentials to our 
+    // login script, and processes the server's reply.
     public void login(String username, String password, LoginCallback callback) {
         RequestBody formBody = new FormBody.Builder()
                 .add("username", username)

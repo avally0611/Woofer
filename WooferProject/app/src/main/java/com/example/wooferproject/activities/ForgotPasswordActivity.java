@@ -10,11 +10,13 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.wooferproject.R;
 import com.example.wooferproject.managers.ForgotPasswordManager;
+import com.google.android.material.textfield.TextInputLayout;
 import java.util.regex.Pattern;
 
 public class ForgotPasswordActivity extends AppCompatActivity {
 
     private EditText emailField, otpField, newPasswordField;
+    private TextInputLayout passwordInputLayout;
     private Button sendCodeBtn, verifyCodeBtn, resetPasswordBtn;
     private TextView noCodeText;
     private ForgotPasswordManager manager;
@@ -26,27 +28,24 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.forgot_password);
 
-        // Initialize UI components
+        // We initialize all our screen components and the manager that handles the
+        // backend logic for sending codes and resetting passwords.
         emailField = findViewById(R.id.editEmail);
         otpField = findViewById(R.id.editOtp);
+        passwordInputLayout = findViewById(R.id.passwordInputLayout);
         newPasswordField = findViewById(R.id.editNewPassword);
         sendCodeBtn = findViewById(R.id.sendCode);
         verifyCodeBtn = findViewById(R.id.verifyCode);
         resetPasswordBtn = findViewById(R.id.resetPassword);
         noCodeText = findViewById(R.id.noCode);
-
         manager = new ForgotPasswordManager();
 
-        // Step 1: Send the code
+        // This section links the buttons to their respective logic for sending, 
+        // verifying, and finally resetting the password.
         sendCodeBtn.setOnClickListener(v -> handleSendCode());
-
-        // Step 2: Verify the code
         verifyCodeBtn.setOnClickListener(v -> handleVerifyCode());
-
-        // Step 3: Reset the password
         resetPasswordBtn.setOnClickListener(v -> handleResetPassword());
 
-        // Resend logic
         noCodeText.setOnClickListener(v -> {
             if (System.currentTimeMillis() - lastSendTime < 60000) {
                 long remaining = (60000 - (System.currentTimeMillis() - lastSendTime)) / 1000;
@@ -57,6 +56,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         });
     }
 
+    // Phase 1: Handles sending the initial reset code to the user's email.
     private void handleSendCode() {
         String email = emailField.getText().toString().trim();
         if (email.isEmpty()) {
@@ -64,7 +64,6 @@ public class ForgotPasswordActivity extends AppCompatActivity {
             return;
         }
 
-        // Check if this is a resend
         isResend = (otpField.getVisibility() == View.VISIBLE);
 
         sendCodeBtn.setEnabled(false);
@@ -84,7 +83,6 @@ public class ForgotPasswordActivity extends AppCompatActivity {
                         isResend ? "A new code has been sent" : "Code sent to your email", 
                         Toast.LENGTH_SHORT).show();
                     
-                    // TRANSITION: Show OTP verification UI, hide Email UI
                     emailField.setVisibility(View.GONE);
                     sendCodeBtn.setVisibility(View.GONE);
                     
@@ -107,6 +105,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         });
     }
 
+    // This block handles the visual countdown for the resend code feature.
     private void startResendTimer() {
         noCodeText.setEnabled(false);
         new CountDownTimer(60000, 1000) {
@@ -121,6 +120,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         }.start();
     }
 
+    // Phase 2: Handles the verification of the 6-digit code received via email.
     private void handleVerifyCode() {
         String email = emailField.getText().toString().trim();
         String otp = otpField.getText().toString().trim();
@@ -138,14 +138,13 @@ public class ForgotPasswordActivity extends AppCompatActivity {
             public void onSuccess(String message) {
                 runOnUiThread(() -> {
                     if (isFinishing()) return;
-                    Toast.makeText(ForgotPasswordActivity.this, "Code Verified!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ForgotPasswordActivity.this, "Code Verified", Toast.LENGTH_SHORT).show();
 
-                    // TRANSITION: Show New Password UI, hide OTP UI
                     otpField.setVisibility(View.GONE);
                     verifyCodeBtn.setVisibility(View.GONE);
                     noCodeText.setVisibility(View.GONE);
 
-                    newPasswordField.setVisibility(View.VISIBLE);
+                    passwordInputLayout.setVisibility(View.VISIBLE);
                     resetPasswordBtn.setVisibility(View.VISIBLE);
                 });
             }
@@ -163,11 +162,11 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         });
     }
 
+    // Phase 3: Handles the final step of updating the user's password in the database.
     private void handleResetPassword() {
         String email = emailField.getText().toString().trim();
         String newPassword = newPasswordField.getText().toString().trim();
 
-        // Applying the password guide used when signing up
         String passwordError = validatePassword(newPassword);
         if (passwordError != null) {
             newPasswordField.setError(passwordError);
@@ -182,8 +181,8 @@ public class ForgotPasswordActivity extends AppCompatActivity {
             public void onSuccess(String message) {
                 runOnUiThread(() -> {
                     if (isFinishing()) return;
-                    Toast.makeText(ForgotPasswordActivity.this, "Password reset successful!", Toast.LENGTH_SHORT).show();
-                    finish(); // Return to Login
+                    Toast.makeText(ForgotPasswordActivity.this, "Password reset successful", Toast.LENGTH_SHORT).show();
+                    finish(); 
                 });
             }
 
@@ -199,26 +198,20 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         });
     }
 
-    /**
-     * Validates password based on requirements used in SignUpActivity:
-     * - Min 8 characters
-     * - At least one uppercase letter
-     * - At least one digit
-     * - At least one special character
-     */
+    // These rules ensure that any new password meets our safety requirements.
     private String validatePassword(String password) {
         if (password.length() < 8) {
             return "Password must be at least 8 characters long";
         }
         if (!Pattern.compile("[A-Z]").matcher(password).find()) {
-            return "Password must contain at least one uppercase letter";
+            return "Needs at least one uppercase letter";
         }
         if (!Pattern.compile("[0-9]").matcher(password).find()) {
-            return "Password must contain at least one digit";
+            return "Needs at least one digit";
         }
         if (!Pattern.compile("[!@#$%^&*(),.?\":{}|<>]").matcher(password).find()) {
-            return "Password must contain at least one special character";
+            return "Needs at least one special character";
         }
-        return null; // No errors
+        return null;
     }
 }

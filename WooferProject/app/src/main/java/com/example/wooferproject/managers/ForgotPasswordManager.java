@@ -11,6 +11,10 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
+/**
+ * This class coordinates all the network requests needed to safely reset a user's password.
+ * It manages three distinct phases: sending an OTP, verifying it, and updating the password.
+ */
 public class ForgotPasswordManager {
 
     private final OkHttpClient client = new OkHttpClient();
@@ -21,6 +25,7 @@ public class ForgotPasswordManager {
         void onFailure(String error);
     }
 
+    // This section handles the request to generate and email a fresh reset code to the user.
     public void sendOtp(String email, ForgotPasswordCallback callback) {
         RequestBody formBody = new FormBody.Builder()
                 .add("email", email)
@@ -44,6 +49,8 @@ public class ForgotPasswordManager {
         });
     }
 
+    // This block manages the second step of confirming that the 6-digit code matches 
+    // the one currently stored in our reset table.
     public void verifyOtp(String email, String otp, ForgotPasswordCallback callback) {
         RequestBody formBody = new FormBody.Builder()
                 .add("email", email)
@@ -68,6 +75,8 @@ public class ForgotPasswordManager {
         });
     }
 
+    // This section handles the final database update that overwrites the user's 
+    // old password with their new chosen one.
     public void resetPassword(String email, String newPassword, ForgotPasswordCallback callback) {
         RequestBody formBody = new FormBody.Builder()
                 .add("email", email)
@@ -92,6 +101,7 @@ public class ForgotPasswordManager {
         });
     }
 
+    // This shared helper block processes all the server's JSON replies and checks for success.
     private void handleResponse(Response response, ForgotPasswordCallback callback) throws IOException {
         if (!response.isSuccessful()) {
             callback.onFailure("Error: " + response.code());

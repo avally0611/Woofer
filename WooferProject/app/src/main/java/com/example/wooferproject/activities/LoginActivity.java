@@ -15,7 +15,6 @@ import com.example.wooferproject.managers.LoginManager;
 
 public class LoginActivity extends AppCompatActivity {
 
-    // Declare UI components for input and interaction
     private EditText usernameField, passwordField;
     private Button loginBtn, signUpBtn;
     private TextView forgotPasswordBtn;
@@ -25,12 +24,12 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Check if user is already logged in
+        // Before showing the login screen, we check if this user has already logged in 
+        // recently. If they have, we just skip this page and send them straight home.
         SharedPreferences prefs = getSharedPreferences("WooferPrefs", MODE_PRIVATE);
         int savedUserId = prefs.getInt("user_id", -1);
 
         if (savedUserId != -1) {
-            // User is already logged in, skip login page and go to Home Screen
             Intent intent = new Intent(LoginActivity.this, HomeScreenActivity.class);
             intent.putExtra("user_id", savedUserId);
             startActivity(intent);
@@ -38,44 +37,38 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        // Set the layout for this activity using the login_page XML
         setContentView(R.layout.login_page);
 
-        // Link the Java UI components to their IDs defined in the XML layout
+        // Here we link our Java variables to the design elements in the XML layout
+        // and initialize our background manager.
         usernameField = findViewById(R.id.enterUsername);
         passwordField = findViewById(R.id.password);
         loginBtn = findViewById(R.id.loginBtn);
         signUpBtn = findViewById(R.id.signUpBtn);
         forgotPasswordBtn = findViewById(R.id.forgot);
-
         loginManager = new LoginManager();
 
-        // When login button is clicked, trigger the handleLogin logic
+        // This section tells the app what to do when buttons are tapped. 
+        // Each button either starts the login process or navigates to a new screen.
         loginBtn.setOnClickListener(v -> handleLogin());
 
-        // When sign up button is clicked, open the SignUpActivity screen
         signUpBtn.setOnClickListener(v -> {
             Intent intent = new Intent(LoginActivity.this, SignUpActivity.class);
             startActivity(intent);
         });
 
-        // When forgot password is clicked, open the ForgotPasswordActivity screen
         forgotPasswordBtn.setOnClickListener(v -> {
             Intent intent = new Intent(LoginActivity.this, ForgotPasswordActivity.class);
             startActivity(intent);
         });
-
     }
 
-    /**
-     * Captures user input and communicates with LoginManager to verify credentials against the database.
-     */
+    // This block handles the actual login logic. It validates that the boxes aren't 
+    // empty, locks the button to prevent double-taps, and talks to the database.
     private void handleLogin() {
-        // Extract text from the input fields and remove extra spaces
         String username = usernameField.getText().toString().trim();
         String password = passwordField.getText().toString().trim();
 
-        // Better Field Validation UI
         if (username.isEmpty()) {
             usernameField.setError("Username is required");
             usernameField.requestFocus();
@@ -87,51 +80,40 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        // Prevent Double-Clicking
         loginBtn.setEnabled(false);
 
-        // Send the credentials to the LoginManager to perform the database query
         loginManager.login(username, password, new LoginManager.LoginCallback() {
             @Override
             public void onSuccess(int userId) {
-                // Save login state in SharedPreferences
+                // If the login works, we save their user ID so the app remembers them
+                // next time, then we switch them over to the home screen.
                 SharedPreferences prefs = getSharedPreferences("WooferPrefs", MODE_PRIVATE);
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putInt("user_id", userId);
                 editor.apply();
 
-                // Since network tasks run on background threads, update the UI on the main thread
                 runOnUiThread(() -> {
-                    //s Activity Lifecycle Safety Check
                     if (isFinishing() || isDestroyed()) return;
-
-                    Toast.makeText(LoginActivity.this, "Login Successful!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LoginActivity.this, "Welcome back", Toast.LENGTH_SHORT).show();
                     
-                    // Create an intent to navigate to the Home Screen
                     Intent intent = new Intent(LoginActivity.this, HomeScreenActivity.class);
-                    // Pass the unique user_id to the next activity for context (e.g., loading their posts)
                     intent.putExtra("user_id", userId);
                     startActivity(intent);
-                    
-                    // finish() removes LoginActivity from the stack so the back button won't return here
-                    finish(); 
+                    finish();
                 });
             }
 
             @Override
             public void onFailure(String error) {
-                // Show the error message (e.g., "Invalid username or password") if the query fails
+                // If login fails, we re-enable the button so they can try again and 
+                // show a clear message explaining why it didn't work.
                 runOnUiThread(() -> {
-                    // Activity Lifecycle Safety Check
                     if (isFinishing() || isDestroyed()) return;
-
-                    // Re-enable button on failure
                     loginBtn.setEnabled(true);
 
-                    // Check if the error indicates that the login doesn't exist
-                    if (error.toLowerCase().contains("not found") || error.toLowerCase().contains("doesn't exist") || error.toLowerCase().contains("invalid username")) {
-                        Toast.makeText(LoginActivity.this, "This login does not exist in the database.", Toast.LENGTH_LONG).show();
-                        usernameField.setError("Login not found");
+                    if (error.toLowerCase().contains("not found") || error.toLowerCase().contains("doesn't exist")) {
+                        Toast.makeText(LoginActivity.this, "We couldn't find that account.", Toast.LENGTH_LONG).show();
+                        usernameField.setError("User not found");
                     } else {
                         Toast.makeText(LoginActivity.this, "Login Failed: " + error, Toast.LENGTH_SHORT).show();
                     }

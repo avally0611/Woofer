@@ -31,7 +31,8 @@ public class SignUpActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.sign_up);
 
-        // Initialize UI components
+        // We start by finding all our UI components and setting up the manager 
+        // that will handle the registration request in the background.
         nameField = findViewById(R.id.Name);
         lastNameField = findViewById(R.id.LastName);
         usernameField = findViewById(R.id.username);
@@ -40,25 +41,22 @@ public class SignUpActivity extends AppCompatActivity {
         passwordCheckText = findViewById(R.id.PasswordCheck);
         signUpBtn = findViewById(R.id.SignUpBtn);
         loginLink = findViewById(R.id.loginLink);
-
         signUpManager = new SignUpManager();
 
-        // Provide real-time feedback for password as the user types
+        // This section sets up interactive parts of the page, like the real-time 
+        // password check and navigation back to the login screen.
         setupPasswordWatcher();
 
-        // Set up button listener for Sign Up
         signUpBtn.setOnClickListener(v -> handleSignUp());
 
-        // Redirect to Login page if they already have an account
         loginLink.setOnClickListener(v -> {
             Intent intent = new Intent(SignUpActivity.this, LoginActivity.class);
             startActivity(intent);
         });
     }
 
-    /**
-     * Listens for text changes in the password field to provide instant validation feedback.
-     */
+    // This block monitors the password field as the user types, giving them instant 
+    // feedback if their password meets our safety standards.
     private void setupPasswordWatcher() {
         passwordField.addTextChangedListener(new TextWatcher() {
             @Override
@@ -71,6 +69,7 @@ public class SignUpActivity extends AppCompatActivity {
                     passwordCheckText.setText("");
                     return;
                 }
+                
                 String error = validatePassword(password);
                 if (error != null) {
                     passwordCheckText.setText(error);
@@ -86,6 +85,8 @@ public class SignUpActivity extends AppCompatActivity {
         });
     }
 
+    // This section gathers all the user's input, runs a final check on the data format, 
+    // and then attempts to create the new account on our server.
     private void handleSignUp() {
         String firstName = nameField.getText().toString().trim();
         String lastName = lastNameField.getText().toString().trim();
@@ -93,20 +94,17 @@ public class SignUpActivity extends AppCompatActivity {
         String email = emailField.getText().toString().trim();
         String password = passwordField.getText().toString().trim();
 
-        // Check if any fields are empty
         if (firstName.isEmpty() || lastName.isEmpty() || username.isEmpty() || email.isEmpty() || password.isEmpty()) {
             Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Validate email format
         if (!isValidEmail(email)) {
             emailField.setError("Please enter a valid email address");
             emailField.requestFocus();
             return;
         }
 
-        // Final check on password requirements before submission
         String passwordError = validatePassword(password);
         if (passwordError != null) {
             passwordCheckText.setText(passwordError);
@@ -114,23 +112,20 @@ public class SignUpActivity extends AppCompatActivity {
             return;
         }
 
-        // Call the manager to register the user
         signUpManager.register(firstName, lastName, username, email, password, new SignUpManager.SignUpCallback() {
             @Override
             public void onSuccess(String message, int userId) {
-                // Save login state in SharedPreferences for session management
+                // If the account is successfully created, we save their login session 
+                // and welcome them to the home screen.
                 SharedPreferences prefs = getSharedPreferences("WooferPrefs", MODE_PRIVATE);
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putInt("user_id", userId);
                 editor.apply();
 
                 runOnUiThread(() -> {
-                    // Prevention of memory leaks and crashes if the activity was closed
                     if (isFinishing()) return;
-
-                    Toast.makeText(SignUpActivity.this, "Registration Successful!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(SignUpActivity.this, "Welcome to Woofer", Toast.LENGTH_LONG).show();
                     
-                    // After successful signup, navigate straight to the Home Screen
                     Intent intent = new Intent(SignUpActivity.this, HomeScreenActivity.class);
                     intent.putExtra("user_id", userId);
                     startActivity(intent);
@@ -140,17 +135,18 @@ public class SignUpActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(String error) {
+                // If something goes wrong, we show a helpful error message so the user 
+                // knows if they need to change their email or username.
                 runOnUiThread(() -> {
                     if (isFinishing()) return;
 
-                    // Specific handling for existing email/username errors
                     if (error.toLowerCase().contains("email already exists")) {
-                        Toast.makeText(SignUpActivity.this, "This email already exists, please login", Toast.LENGTH_LONG).show();
+                        Toast.makeText(SignUpActivity.this, "That email is already in use.", Toast.LENGTH_LONG).show();
                         emailField.setError("Email already in use");
                     } else {
-                        Toast.makeText(SignUpActivity.this, "Registration Failed: " + error, Toast.LENGTH_LONG).show();
+                        Toast.makeText(SignUpActivity.this, "Error: " + error, Toast.LENGTH_LONG).show();
                         if (error.toLowerCase().contains("username")) {
-                            usernameField.setError("Username already taken");
+                            usernameField.setError("That username is already taken");
                         }
                     }
                 });
@@ -158,32 +154,23 @@ public class SignUpActivity extends AppCompatActivity {
         });
     }
 
-    /**
-     * Validates password based on:
-     * - Min 8 characters
-     * - At least one uppercase letter
-     * - At least one digit
-     * - At least one special character
-     */
+    // These are the specific rules we use to keep passwords safe.
     private String validatePassword(String password) {
         if (password.length() < 8) {
             return "Password must be at least 8 characters long";
         }
         if (!Pattern.compile("[A-Z]").matcher(password).find()) {
-            return "Password must contain at least one uppercase letter";
+            return "Needs at least one uppercase letter";
         }
         if (!Pattern.compile("[0-9]").matcher(password).find()) {
-            return "Password must contain at least one digit";
+            return "Needs at least one digit";
         }
         if (!Pattern.compile("[!@#$%^&*(),.?\":{}|<>]").matcher(password).find()) {
-            return "Password must contain at least one special character";
+            return "Needs at least one special character";
         }
-        return null; // No errors
+        return null;
     }
 
-    /**
-     * Helper method to check if an email string matches the standard email format
-     */
     private boolean isValidEmail(String email) {
         return Patterns.EMAIL_ADDRESS.matcher(email).matches();
     }

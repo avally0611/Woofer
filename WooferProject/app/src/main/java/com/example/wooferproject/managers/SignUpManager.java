@@ -13,6 +13,10 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
+/**
+ * This class deals with the background networking for creating a new user account.
+ * It packages the user's data and sends it to our signup script on the server.
+ */
 public class SignUpManager {
 
     private final OkHttpClient client = new OkHttpClient();
@@ -22,6 +26,8 @@ public class SignUpManager {
         void onFailure(String error);
     }
 
+    // This block handles the entire registration request flow, from building the 
+    // form to handling the success or failure messages from the database.
     public void register(String firstName, String lastName, String username, String email, String password, SignUpCallback callback) {
         RequestBody formBody = new FormBody.Builder()
                 .add("name", firstName)
