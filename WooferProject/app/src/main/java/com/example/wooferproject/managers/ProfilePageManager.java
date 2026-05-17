@@ -207,4 +207,75 @@ public class ProfilePageManager {
         void onSuccess(byte[] image);
         void onFailure(String error);
     }
+
+    public interface CheckCallback {
+        void onSuccess(boolean exists);
+        void onFailure(String error);
+    }
+
+    public static void checkUsernameExists(String username, CheckCallback callback) {
+        Request request = new Request.Builder()
+                .url(BASE_URL + "check_username.php?username=" + username)
+                .build();
+
+        c.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                new Handler(Looper.getMainLooper()).post(() -> callback.onFailure("Network error: " + e.getMessage()));
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    try {
+                        String responseData = response.body().string();
+                        JSONObject jsonResponse = new JSONObject(responseData);
+                        Handler mainHandler = new Handler(Looper.getMainLooper());
+                        if (jsonResponse.getBoolean("exists")) {
+                            mainHandler.post(() -> callback.onSuccess(true));
+                        } else {
+                            mainHandler.post(() -> callback.onSuccess(false));
+                        }
+                    } catch (JSONException e) {
+                        new Handler(Looper.getMainLooper()).post(() -> callback.onFailure("Parse error: " + e.getMessage()));
+                    }
+                } else {
+                    new Handler(Looper.getMainLooper()).post(() -> callback.onFailure("Server error: " + response.code()));
+                }
+            }
+        });
+    }
+
+    public static void checkEmailExists(String email, CheckCallback callback) {
+        Request request = new Request.Builder()
+                .url(BASE_URL + "check_email.php?email=" + email)
+                .build();
+
+        c.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                new Handler(Looper.getMainLooper()).post(() -> callback.onFailure("Network error: " + e.getMessage()));
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    try {
+                        String responseData = response.body().string();
+                        JSONObject jsonResponse = new JSONObject(responseData);
+                        Handler mainHandler = new Handler(Looper.getMainLooper());
+                        if (jsonResponse.getBoolean("exists")) {
+                            mainHandler.post(() -> callback.onSuccess(true));
+                        } else {
+                            mainHandler.post(() -> callback.onSuccess(false));
+                        }
+                    } catch (JSONException e) {
+                        new Handler(Looper.getMainLooper()).post(() -> callback.onFailure("Parse error: " + e.getMessage()));
+                    }
+                } else {
+                    new Handler(Looper.getMainLooper()).post(() -> callback.onFailure("Server error: " + response.code()));
+                }
+            }
+        });
+    }
 }

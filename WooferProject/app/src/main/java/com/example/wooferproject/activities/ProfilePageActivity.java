@@ -7,6 +7,8 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.MediaStore;
 import android.widget.Button;
 import android.widget.EditText;
@@ -33,11 +35,17 @@ import java.io.IOException;
 public class ProfilePageActivity extends AppCompatActivity {
 
     EditText name, username, email;
-    TextView password, resetPassword;
+    TextView password, resetPassword, usernameError, emailError;
     Button editBtn, logoutBtn,deleteBtn;
     ImageView profileImage;
     ImageButton returnBtn;
     private int userId;
+    private String originalUsername, originalEmail;
+    private boolean isUsernameValid = true;
+    private boolean isEmailValid = true;
+
+    private Handler validationHandler = new Handler(Looper.getMainLooper());
+    private Runnable usernameCheckRunnable, emailCheckRunnable;
 
     boolean isEditing = false;
     private ActivityResultLauncher<Intent> imagePickerLauncher;
@@ -48,6 +56,10 @@ public class ProfilePageActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.profile_page);
+
+        // Initialize TextViews for error messages
+        usernameError = findViewById(R.id.username_error);
+        emailError = findViewById(R.id.email_error);
 
         userId = getIntent().getIntExtra("user_id", -1);
         if (userId == -1) {
@@ -118,12 +130,12 @@ public class ProfilePageActivity extends AppCompatActivity {
         // Edit and save button
         editBtn.setOnClickListener(v -> {
 
-                    if (!isEditing) {
-                        setEditMode(true);
-                    } else {
-                        saveProfile();
-                    }
-                });
+            if (!isEditing) {
+                setEditMode(true);
+            } else {
+                saveProfile();
+            }
+        });
 
         // reset password
         resetPassword.setOnClickListener(v -> {
@@ -136,7 +148,7 @@ public class ProfilePageActivity extends AppCompatActivity {
             SharedPreferences loginPrefs = getSharedPreferences("WooferPrefs", MODE_PRIVATE);
             loginPrefs.edit().clear().apply();
 
-            // Redirect to Login Page and clear the activity stack
+            // Redirect to Login Page and clear  activity stack
             Intent intent = new Intent(ProfilePageActivity.this, LoginActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
@@ -165,6 +177,9 @@ public class ProfilePageActivity extends AppCompatActivity {
                     name.setText(user.name);
                     username.setText(user.username);
                     email.setText(user.email);
+                    originalUsername = user.username;
+                    originalEmail = user.email;
+                    setupRealTimeValidation();
                 });
             }
 
@@ -232,6 +247,13 @@ public class ProfilePageActivity extends AppCompatActivity {
     }
 
     private void setEditMode(boolean enable) {
+        // Clear errors when entering edit mode
+        if (enable) {
+            usernameError.setText("");
+            emailError.setText("");
+            isUsernameValid = true;
+            isEmailValid = true;
+        }
         isEditing = enable;
         name.setEnabled(enable);
         username.setEnabled(enable);
@@ -247,14 +269,132 @@ public class ProfilePageActivity extends AppCompatActivity {
         }
     }
 
+    private void setupRealTimeValidation() {
+        username.addTextChangedListener(new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override
+            public void afterTextChanged(android.text.Editable s) {
+                if (!isEditing) return;
+                String input = s.toString().trim();
+                validationHandler.removeCallbacks(usernameCheckRunnable);
+
+                if (input.isEmpty()) {
+                    usernameError.setText("Username cannot be empty");
+                    usernameError.setTextColor(android.graphics.Color.RED);
+                    isUsernameValid = false;
+                } else if (input.equals(originalUsername)) {
+                    usernameError.setText("");
+                    isUsernameValid = true;
+                } else {
+                    isUsernameValid = false; // Assume invalid until check passes
+                    usernameError.setText("Checking...");
+                    usernameError.setTextColor(android.graphics.Color.GRAY);
+                    usernameCheckRunnable = () -> checkUsername(input);
+                    validationHandler.postDelayed(usernameCheckRunnable, 500);
+                }
+            }
+        });
+
+        email.addTextChangedListener(new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override
+            public void afterTextChanged(android.text.Editable s) {
+                if (!isEditing) return;
+                String input = s.toString().trim();
+                validationHandler.removeCallbacks(emailCheckRunnable);
+
+                if (input.isEmpty()) {
+                    emailError.setText("Email cannot be empty");
+                    emailError.setTextColor(android.graphics.Color.RED);
+                    isEmailValid = false;
+                } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(input).matches()) {
+                    emailError.setText("Invalid email address");
+                    emailError.setTextColor(android.graphics.Color.RED);
+                    isEmailValid = false;
+                } else if (input.equals(originalEmail)) {
+                    emailError.setText("");
+                    isEmailValid = true;
+                } else {
+                    isEmailValid = false; // Assume invalid until check passes
+                    emailError.setText("Checking...");
+                    emailError.setTextColor(android.graphics.Color.GRAY);
+                    emailCheckRunnable = () -> checkEmail(input);
+                    validationHandler.postDelayed(emailCheckRunnable, 500);
+                }
+            }
+        });
+    }
+
+    private void checkUsername(String u) {
+        ProfilePageManager.checkUsernameExists(u, new ProfilePageManager.CheckCallback() {
+            @Override
+            public void onSuccess(boolean exists) {
+                if (exists) {
+                    usernameError.setText("Username already exists");
+                    usernameError.setTextColor(android.graphics.Color.RED);
+                    isUsernameValid = false;
+                } else {
+                    usernameError.setText("Username available");
+                    usernameError.setTextColor(android.graphics.Color.GREEN);
+                    isUsernameValid = true;
+                }
+            }
+            @Override
+            public void onFailure(String error) {
+                runOnUiThread(() -> {
+                    usernameError.setText("Check failed: " + error);
+                    usernameError.setTextColor(android.graphics.Color.RED);
+                });
+            }
+        });
+    }
+
+    private void checkEmail(String e) {
+        ProfilePageManager.checkEmailExists(e, new ProfilePageManager.CheckCallback() {
+            @Override
+            public void onSuccess(boolean exists) {
+                if (exists) {
+                    emailError.setText("Email already exists");
+                    emailError.setTextColor(android.graphics.Color.RED);
+                    isEmailValid = false;
+                } else {
+                    emailError.setText("Valid email address");
+                    emailError.setTextColor(android.graphics.Color.GREEN);
+                    isEmailValid = true;
+                }
+            }
+            @Override
+            public void onFailure(String error) {
+                runOnUiThread(() -> {
+                    emailError.setText("Check failed: " + error);
+                    emailError.setTextColor(android.graphics.Color.RED);
+                });
+            }
+        });
+    }
+
     private void saveProfile() {
+        if (!isUsernameValid || !isEmailValid) {
+            Toast.makeText(this, "Please fix errors before saving", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        performProfileSave(username.getText().toString().trim(), email.getText().toString().trim());
+    }
+
+    private void performProfileSave(String newUsername, String newEmail) {
 
         // Save text details
         ProfilePageManager.updateProfile(
                 userId,
                 name.getText().toString(),
-                username.getText().toString(),
-                email.getText().toString()
+                newUsername,
+                newEmail
         );
 
         // Save image
@@ -292,6 +432,10 @@ public class ProfilePageActivity extends AppCompatActivity {
             if (id == R.id.home) intent = new Intent(this, HomeScreenActivity.class);
             else if (id == R.id.search) intent = new Intent(this, SearchActivity.class);
             else if (id == R.id.add) intent = new Intent(this, PostPageActivity.class);
+            else if (id == R.id.profile) {
+                // If already on profile page, do nothing or refresh
+                return true;
+            }
 
             if (intent != null) {
                 intent.putExtra("user_id", userId);
