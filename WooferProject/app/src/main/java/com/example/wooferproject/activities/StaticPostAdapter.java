@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -23,10 +24,12 @@ import java.util.List;
 //so recycler view has a built in adapter but we have to make our own specific to the project so we make our own object that extends the recycler object's mrthods
 public class StaticPostAdapter extends RecyclerView.Adapter<StaticPostAdapter.PostViewHolder> {
     private ArrayList<Post> posts;
+    private boolean isOwnProfile;
 
     //this allows home actity to send the list posts to the adapter so it can start drawing the cards
-    public StaticPostAdapter(ArrayList<Post> posts) {
+    public StaticPostAdapter(ArrayList<Post> posts, boolean isOwnProfile) {
         this.posts = posts;
+        this.isOwnProfile = isOwnProfile;
     }
 
     //okay so we first create a blank card so as soon as screen is made we can display on screen
@@ -103,6 +106,15 @@ public class StaticPostAdapter extends RecyclerView.Adapter<StaticPostAdapter.Po
         holder.upvoteButton.setImageResource(R.drawable.ic_heart_empty); // Set a default empty heart image
         holder.upvoteButton.setColorFilter(android.graphics.Color.BLACK); // Set a default color
         holder.upvoteCount.setText(String.valueOf(currPost.getUpvotes())); // Display the initial upvote count statically
+
+        // Show toast when clicking upvote button on profile page
+        holder.upvoteButton.setOnClickListener(v -> {
+            if (isOwnProfile) {
+                Toast.makeText(v.getContext(), "You're doing great! But remember, you can't upvote your own posts.", Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(v.getContext(), "Images can only be upvoted from HomeScreen if user is a friend", Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     //need this to tell recycler view how many cards exist in view

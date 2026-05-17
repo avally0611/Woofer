@@ -87,7 +87,7 @@ public class PreProfilePageActivity extends AppCompatActivity {
 
     private void setupRecyclerView() {
         preProfilePostsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        postAdapter = new StaticPostAdapter(new ArrayList<>());
+        postAdapter = new StaticPostAdapter(new ArrayList<>(),true);
         preProfilePostsRecyclerView.setAdapter(postAdapter);
     }
 
