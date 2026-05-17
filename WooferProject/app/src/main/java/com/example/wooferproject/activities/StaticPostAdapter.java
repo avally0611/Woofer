@@ -110,9 +110,9 @@ public class StaticPostAdapter extends RecyclerView.Adapter<StaticPostAdapter.Po
         // Show toast when clicking upvote button on profile page
         holder.upvoteButton.setOnClickListener(v -> {
             if (isOwnProfile) {
-                Toast.makeText(v.getContext(), "You're doing great! But remember, you can't upvote your own posts.", Toast.LENGTH_LONG).show();
+                Toast.makeText(v.getContext(), "Users can't upvote their own Posts.", Toast.LENGTH_LONG).show();
             } else {
-                Toast.makeText(v.getContext(), "Images can only be upvoted from HomeScreen if user is a friend", Toast.LENGTH_LONG).show();
+                Toast.makeText(v.getContext(), "Friends's Posts can only be upvoted from HomeScreen", Toast.LENGTH_LONG).show();
             }
         });
     }
