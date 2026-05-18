@@ -1,8 +1,4 @@
 package com.example.wooferproject.activities;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,15 +9,11 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.wooferproject.R;
-import com.example.wooferproject.managers.HomeScreenManager;
 import com.example.wooferproject.managers.SearchManager;
-import com.example.wooferproject.models.Post;
 import com.example.wooferproject.models.SearchUser;
 import android.content.Intent;
-import com.example.wooferproject.activities.UserProfileActivity;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class SearchUserAdapter extends RecyclerView.Adapter<SearchUserAdapter.UserViewHolder>
 {

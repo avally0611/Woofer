@@ -1,7 +1,5 @@
 package com.example.wooferproject.managers;
 
-import androidx.annotation.NonNull;
-
 import com.example.wooferproject.interfaces.PostCallback;
 import com.example.wooferproject.models.Post;
 
@@ -10,7 +8,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.sql.Array;
 import java.util.ArrayList;
 
 import okhttp3.Call;

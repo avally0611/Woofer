@@ -3,6 +3,7 @@ package com.example.wooferproject.activities;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -24,6 +25,7 @@ public class MyFriendsListActivity extends AppCompatActivity {
     private int targetUserId; // The person whose friends list we are viewing
     private int loggedInUserId; // The person currently logged in
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,18 +44,28 @@ public class MyFriendsListActivity extends AppCompatActivity {
             finish();
             return;
         }
+        TextView friendsCountTextView = findViewById(R.id.profile_friends_count);
+        friendsRecyclerView = findViewById(R.id.friendsRecyclerView);
+        friendsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        friendsList = new ArrayList<>();
 
         // Setup RecyclerView
         friendsRecyclerView = findViewById(R.id.friendsRecyclerView);
         friendsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-
+        boolean isOwner = (targetUserId == loggedInUserId);
         friendsList = new ArrayList<>();
-        friendsAdapter = new MyFriendsAdapter(friendsList, loggedInUserId, position -> {
-            // Optional: Handle friendship change event
+        friendsAdapter = new MyFriendsAdapter(friendsList, loggedInUserId, isOwner, position -> {
+
+            if (friendsCountTextView != null) {
+                friendsCountTextView.setText(friendsList.size() + " Friends");
+            }
         });
+
+
         friendsRecyclerView.setAdapter(friendsAdapter);
 
         loadFriends();
+
 
         // Back Button
         ImageButton backButton = findViewById(R.id.backButton);

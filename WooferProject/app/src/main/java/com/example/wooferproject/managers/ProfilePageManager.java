@@ -1,7 +1,5 @@
 package com.example.wooferproject.managers;
 
-import static android.content.ContentValues.TAG;
-
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Base64;
@@ -15,7 +13,6 @@ import org.json.JSONObject;
 import java.io.IOException;
 
 import okhttp3.Call;
-import okhttp3.Callback;
 import okhttp3.FormBody;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;

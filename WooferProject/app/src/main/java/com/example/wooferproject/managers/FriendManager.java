@@ -1,7 +1,6 @@
 package com.example.wooferproject.managers;
 
 import android.content.Context;
-import android.util.Log;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -19,9 +18,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class FriendManager {
     private static final String TAG = "FriendManager";

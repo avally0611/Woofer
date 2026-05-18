@@ -20,6 +20,7 @@ import java.util.List;
 public class MyFriendsAdapter extends RecyclerView.Adapter<MyFriendsAdapter.FriendViewHolder> {
 
     private List<User> friendList;
+    private boolean isMyOwnList;
     private int currentUserId; // The person viewing the list
     private OnFriendshipChangedListener friendshipChangedListener;
 
@@ -27,11 +28,13 @@ public class MyFriendsAdapter extends RecyclerView.Adapter<MyFriendsAdapter.Frie
         void onFriendshipChanged(int position);
     }
 
-    public MyFriendsAdapter(List<User> friendList, int currentUserId, OnFriendshipChangedListener listener) {
+    public MyFriendsAdapter(List<User> friendList, int currentUserId, boolean isMyOwnList, OnFriendshipChangedListener listener) {
         this.friendList = friendList;
         this.currentUserId = currentUserId;
+        this.isMyOwnList = isMyOwnList; // Now it will correctly set to true or false
         this.friendshipChangedListener = listener;
     }
+
 
     @NonNull
     @Override
@@ -54,17 +57,33 @@ public class MyFriendsAdapter extends RecyclerView.Adapter<MyFriendsAdapter.Frie
 
             holder.actionButton.setOnClickListener(v -> {
                 FriendManager.getInstance().unfriend(currentUserId, user.id, new FriendManager.ActionCallback() {
+
                     @Override
                     public void onSuccess(String message) {
-                        user.isFriend = false;
-                        notifyItemChanged(position);
-                        if (friendshipChangedListener != null) friendshipChangedListener.onFriendshipChanged(position);
-                        Toast.makeText(v.getContext(), message, Toast.LENGTH_SHORT).show();
+                        ((android.app.Activity) v.getContext()).runOnUiThread(() -> {
+                            if (isMyOwnList) {
+                                //  It's my list, remove friends entirely
+                                int currentPos = holder.getAdapterPosition();
+                                if (currentPos != RecyclerView.NO_POSITION) {
+                                    friendList.remove(currentPos);
+                                    notifyItemRemoved(currentPos);
+                                    notifyItemRangeChanged(currentPos, friendList.size());
+                                }
+                            } else {
+                                //  It's someone else's list, just change the icon to "Add"
+                                user.isFriend = false;
+                                notifyItemChanged(holder.getAdapterPosition());
+                            }
+                            Toast.makeText(v.getContext(), message, Toast.LENGTH_SHORT).show();
+                        });
                     }
+
 
                     @Override
                     public void onFailure(String error) {
-                        Toast.makeText(v.getContext(), "Error: " + error, Toast.LENGTH_SHORT).show();
+                        ((android.app.Activity) v.getContext()).runOnUiThread(() -> {
+                            Toast.makeText(v.getContext(), "Error: " + error, Toast.LENGTH_SHORT).show();
+                        });
                     }
                 });
             });
@@ -75,17 +94,30 @@ public class MyFriendsAdapter extends RecyclerView.Adapter<MyFriendsAdapter.Frie
 
             holder.actionButton.setOnClickListener(v -> {
                 FriendManager.getInstance().addFriend(currentUserId, user.id, new FriendManager.ActionCallback() {
+
                     @Override
                     public void onSuccess(String message) {
+
                         user.isFriend = true;
-                        notifyItemChanged(position);
-                        if (friendshipChangedListener != null) friendshipChangedListener.onFriendshipChanged(position);
-                        Toast.makeText(v.getContext(), message, Toast.LENGTH_SHORT).show();
+
+                        ((android.app.Activity) v.getContext()).runOnUiThread(() -> {
+
+                            notifyItemChanged(position);
+
+                            if (friendshipChangedListener != null) {
+                                friendshipChangedListener.onFriendshipChanged(position);
+                            }
+
+                            Toast.makeText(v.getContext(), message, Toast.LENGTH_SHORT).show();
+                        });
                     }
 
                     @Override
                     public void onFailure(String error) {
-                        Toast.makeText(v.getContext(), "Error: " + error, Toast.LENGTH_SHORT).show();
+
+                        ((android.app.Activity) v.getContext()).runOnUiThread(() -> {
+                            Toast.makeText(v.getContext(), "Error: " + error, Toast.LENGTH_SHORT).show();
+                        });
                     }
                 });
             });

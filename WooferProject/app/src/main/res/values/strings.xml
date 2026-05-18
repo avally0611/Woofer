@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">WooferProject</string>
+    <string name="app_name">Bond</string>
     <string name="logo_desc">App Logo</string>
     <string name="hint_first_name">Enter First Name</string>
     <string name="hint_last_name">Enter Last Name</string>

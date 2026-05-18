@@ -14,6 +14,7 @@ import com.example.wooferproject.managers.ForgotPasswordManager;
 import com.google.android.material.textfield.TextInputLayout;
 import java.util.regex.Pattern;
 
+
 public class ForgotPasswordActivity extends AppCompatActivity {
 
     private EditText emailField, otpField, newPasswordField;

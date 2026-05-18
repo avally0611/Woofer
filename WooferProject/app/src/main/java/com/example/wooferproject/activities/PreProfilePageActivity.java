@@ -15,7 +15,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.wooferproject.R;
 import com.example.wooferproject.managers.PreProfilePageManager;
-import com.example.wooferproject.activities.StaticPostAdapter;
 import com.example.wooferproject.models.Post;
 import com.example.wooferproject.models.User;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -55,8 +54,6 @@ public class PreProfilePageActivity extends AppCompatActivity {
             return;
         }
 
-
-
         initViews();
         setupRecyclerView();
         setupManageButton();
@@ -65,10 +62,17 @@ public class PreProfilePageActivity extends AppCompatActivity {
         setupBottomNav(bottomNav);
         bottomNav.setSelectedItemId(R.id.profile);
 
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // This runs every time you return to this screen (e.g., after unfriending)
         loadProfileDataAndCounts(userId);
         loadProfileImage(userId);
         loadUserPosts(userId);
     }
+
 
     private void initViews() {
         preProfileImage = findViewById(R.id.pre_profile_image);
